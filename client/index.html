@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audire Arcanus - Join Lobby</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>✨Audire Arcanus FM✨</h1>
+        <p class="tagline">High quality audio beamed straight to you</p>
+      </header>
+
+      <main>
+        <div id="lobby-selection" class="card">
+          <h2>Join a Lobby</h2>
+          <div class="form-group">
+            <label for="username">Your Name</label>
+            <input type="text" id="username" placeholder="Enter your name" />
+          </div>
+          <div class="form-group">
+            <label for="join-code">6-Digit Join Code</label>
+            <input
+              type="text"
+              id="join-code"
+              placeholder="000000"
+              maxlength="6"
+              pattern="[0-9]{6}"
+            />
+            <small style="color: #666; margin-top: 0.5rem; display: block">
+              Get the join code from the host
+            </small>
+          </div>
+          <button id="join-btn" class="btn btn-primary" style="width: 100%">
+            Join Lobby
+          </button>
+        </div>
+
+        <div id="player-view" class="card hidden">
+          <div class="player-header">
+            <h2 id="lobby-name">Lobby Name</h2>
+            <button id="leave-btn" class="btn btn-danger">Leave Lobby</button>
+          </div>
+          <div class="player-info">
+            <div class="info-item">
+              <span class="label">Bitrate:</span>
+              <span id="bitrate">320 kbps</span>
+            </div>
+            <div
+              class="info-item"
+              style="flex-direction: column; align-items: flex-start"
+            >
+              <span class="label">Listeners:</span>
+              <div id="listeners-list" style="margin-top: 0.5rem; width: 100%">
+                <span style="color: #666">No listeners</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="label">Status:</span>
+              <span id="connection-status" class="status connecting"
+                >Connecting...</span
+              >
+            </div>
+            <div class="info-item">
+              <span class="label">Data Received:</span>
+              <span id="data-received">0 KB</span>
+            </div>
+          </div>
+          <div class="audio-controls">
+            <div class="control-group">
+              <label for="output-device">Output Device:</label>
+              <select id="output-device" class="device-selector">
+                <option value="">Default</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="volume-control">Volume:</label>
+              <input
+                type="range"
+                id="volume-control"
+                class="volume-slider"
+                min="0"
+                max="100"
+                value="50"
+              />
+              <span id="volume-value">50%</span>
+            </div>
+          </div>
+          <div class="audio-notice">
+            <p>🎧 <strong>High Fidelity PCM Audio Stream</strong></p>
+            <p>48kHz • 16-bit • Stereo</p>
+          </div>
+          <div id="visualizer" class="visualizer">
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <p>Friday Night, Copyright (c) 2025 Author. All Rights Reserved.</p>
+      </footer>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

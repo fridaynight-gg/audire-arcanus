@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audire Arcanus</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="terminal-window">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          🎵 AUDIRE ARCANUS - High Fidelity Audio Streaming
+        </div>
+        <div class="header-info">
+          Server: <span id="server-url">http://localhost:5551</span>
+        </div>
+      </header>
+
+      <!-- Main Grid Layout -->
+      <div class="main-grid">
+        <!-- Audio Sources Panel -->
+        <div
+          class="panel audio-sources-panel"
+          id="audio-sources-panel"
+          tabindex="0"
+        >
+          <div class="panel-header">
+            <span class="panel-title">Audio Sources</span>
+            <span class="panel-count" id="audio-count">0</span>
+          </div>
+          <div class="panel-content">
+            <ul class="list" id="audio-sources-list">
+              <li class="list-item-empty">Loading audio sources...</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Lobbies Panel -->
+        <div class="panel lobbies-panel" id="lobbies-panel" tabindex="0">
+          <div class="panel-header">
+            <span class="panel-title">Active Lobbies</span>
+            <span class="panel-count" id="lobby-count">0</span>
+          </div>
+          <div class="panel-content">
+            <ul class="list" id="lobbies-list">
+              <li class="list-item-empty">No lobbies created</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Stream Stats Panel -->
+        <div class="panel stats-panel">
+          <div class="panel-header">
+            <span class="panel-title">Stream Stats</span>
+          </div>
+          <div class="panel-content">
+            <div class="stats-content" id="stats-content">
+              <div class="stats-empty">No active streams</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connected Listeners Panel -->
+        <div class="panel listeners-panel">
+          <div class="panel-header">
+            <span class="panel-title">Connected Listeners</span>
+            <span class="panel-count" id="listener-count">0</span>
+          </div>
+          <div class="panel-content">
+            <div class="listeners-content" id="listeners-content">
+              <div class="listeners-empty">No listeners connected</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="panel log-panel">
+          <div class="panel-header">
+            <span class="panel-title">Event Log</span>
+          </div>
+          <div class="panel-content">
+            <div class="log-content" id="log-content">
+              <div class="log-line">🎵 Audire Arcanus initialized</div>
+              <div class="log-line">📡 Backend server starting...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Commands Footer -->
+      <footer class="commands">
+        <div class="commands-content" id="commands-content">
+          <!-- Commands will be dynamically updated based on focused panel -->
+        </div>
+      </footer>
+    </div>
+
+    <!-- Modal for input prompts -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <div class="modal-header" id="modal-title">Enter Value</div>
+        <input
+          type="text"
+          class="modal-input"
+          id="modal-input"
+          placeholder="Type here..."
+        />
+        <div class="modal-buttons">
+          <button class="modal-button modal-button-primary" id="modal-ok">
+            OK
+          </button>
+          <button class="modal-button" id="modal-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
