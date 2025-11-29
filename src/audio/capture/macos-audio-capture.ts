@@ -166,8 +166,8 @@ export class MacOSAudioCapture implements IAudioCapture {
       this.stopCapture();
 
       // Build ffmpeg arguments for macOS AVFoundation
-      // Buffer size: 4800 samples = 100ms at 48kHz (good for low latency + smooth playback)
-      const bufferSamples = Math.floor(sampleRate * 0.1); // 100ms buffer
+      // Buffer size: 4800 samples = 100ms at 48kHz
+      // For s16le format: 4800 samples × 2 channels × 2 bytes = 19,200 bytes per 100ms chunk
       const args = [
         '-f',
         'avfoundation', // Input format for macOS
@@ -176,11 +176,9 @@ export class MacOSAudioCapture implements IAudioCapture {
         '-f',
         's16le', // Output format: signed 16-bit little-endian PCM
         '-ar',
-        sampleRate.toString(), // Sample rate
+        sampleRate.toString(), // Sample rate (48000 Hz)
         '-ac',
-        channels.toString(), // Number of channels
-        '-frame_size',
-        bufferSamples.toString(), // Set consistent frame size for smooth streaming
+        channels.toString(), // Number of channels (2 = stereo)
         '-', // Output to stdout (pipe)
       ];
 

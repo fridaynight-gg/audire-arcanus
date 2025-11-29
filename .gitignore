@@ -10,12 +10,17 @@
 src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
-# But keep config and client files
+
+# Client TypeScript compiled files
+client/app.js
+client/app.js.map
+
+# But keep config and static files
 !*.config.js
 !*.config.mjs
 !eslint.config.mjs
-!client/**/*.js
 !electron/gui/**/*.js
+!server.js
 
 # Logs
 logs

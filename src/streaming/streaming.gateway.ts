@@ -5,6 +5,8 @@ import {
   MessageBody,
   ConnectedSocket,
   OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { StreamingService } from './streaming.service';
@@ -17,11 +19,18 @@ import { LobbyService } from '../lobby/lobby.service';
     origin: '*',
   },
 })
-export class StreamingGateway implements OnGatewayInit {
+export class StreamingGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
   private readonly logger = new Logger(StreamingGateway.name);
+
+  // Buffer chunker for consistent audio packet sizes
+  // 48kHz × 2 channels × 2 bytes × 0.1s = 19,200 bytes per 100ms chunk
+  private readonly CHUNK_SIZE = 19200;
+  private audioBuffers: Map<string, Buffer> = new Map();
 
   constructor(
     private readonly streamingService: StreamingService,
@@ -32,6 +41,14 @@ export class StreamingGateway implements OnGatewayInit {
 
   afterInit() {
     this.logger.log('Streaming gateway initialized');
+  }
+
+  handleConnection(client: Socket) {
+    this.logger.log(`Client connected: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('start-stream')
@@ -77,11 +94,47 @@ export class StreamingGateway implements OnGatewayInit {
       if (success) {
         this.logger.log(`Started streaming to lobby ${lobbyId}`);
 
-        // Set up audio data forwarding with error handling
+        // Initialize buffer for this lobby
+        this.audioBuffers.set(lobbyId, Buffer.alloc(0));
+
+        // Set up audio data forwarding with chunking for consistent packet sizes
+        let packetCount = 0;
         audioStream.on('data', (chunk: Buffer) => {
           try {
-            // Broadcast to all clients in this lobby
-            this.server.to(`lobby-${lobbyId}`).emit('audio-data', chunk);
+            packetCount++;
+
+            // Log first few chunks from ffmpeg
+            if (packetCount <= 5) {
+              this.logger.log(
+                `[FFMPEG] Chunk #${packetCount}: ${chunk.length} bytes`,
+              );
+            }
+
+            // Add chunk to buffer
+            const currentBuffer =
+              this.audioBuffers.get(lobbyId) || Buffer.alloc(0);
+            const newBuffer = Buffer.concat([currentBuffer, chunk]);
+
+            // Send complete chunks
+            let offset = 0;
+            let chunksEmitted = 0;
+            while (offset + this.CHUNK_SIZE <= newBuffer.length) {
+              const packet = newBuffer.slice(offset, offset + this.CHUNK_SIZE);
+              // Broadcast consistent-sized chunks to all clients
+              this.server.to(`lobby-${lobbyId}`).emit('audio-data', packet);
+              offset += this.CHUNK_SIZE;
+              chunksEmitted++;
+            }
+
+            // Log chunking activity
+            if (packetCount <= 5) {
+              this.logger.log(
+                `[CHUNKER] Received ${chunk.length} bytes, buffered ${currentBuffer.length}, emitted ${chunksEmitted} chunks, remaining ${newBuffer.length - offset} bytes`,
+              );
+            }
+
+            // Store remaining bytes for next iteration
+            this.audioBuffers.set(lobbyId, newBuffer.slice(offset));
           } catch (error) {
             this.logger.error(
               `Error broadcasting audio data to lobby ${lobbyId}:`,
@@ -116,6 +169,9 @@ export class StreamingGateway implements OnGatewayInit {
     const { lobbyId } = data;
     this.streamingService.stopStream(lobbyId);
     this.logger.log(`Stopped streaming to lobby ${lobbyId}`);
+
+    // Clean up audio buffer for this lobby
+    this.audioBuffers.delete(lobbyId);
 
     // Notify all clients in the lobby that streaming has stopped
     this.server.to(`lobby-${lobbyId}`).emit('stream-stopped', { lobbyId });
