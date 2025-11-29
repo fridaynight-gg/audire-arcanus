@@ -18,6 +18,12 @@ import { LobbyService } from '../lobby/lobby.service';
   cors: {
     origin: '*',
   },
+  maxHttpBufferSize: 1e8, // 100 MB - allow large audio packets
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ['websocket'], // Force websocket transport (no polling fallback)
+  perMessageDeflate: false, // Disable compression for lower latency
+  httpCompression: false, // Disable HTTP compression
 })
 export class StreamingGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -26,11 +32,6 @@ export class StreamingGateway
   server: Server;
 
   private readonly logger = new Logger(StreamingGateway.name);
-
-  // Buffer chunker for consistent audio packet sizes
-  // 48kHz × 2 channels × 2 bytes × 0.1s = 19,200 bytes per 100ms chunk
-  private readonly CHUNK_SIZE = 19200;
-  private audioBuffers: Map<string, Buffer> = new Map();
 
   constructor(
     private readonly streamingService: StreamingService,
@@ -94,47 +95,23 @@ export class StreamingGateway
       if (success) {
         this.logger.log(`Started streaming to lobby ${lobbyId}`);
 
-        // Initialize buffer for this lobby
-        this.audioBuffers.set(lobbyId, Buffer.alloc(0));
-
-        // Set up audio data forwarding with chunking for consistent packet sizes
+        // Set up audio data forwarding - send chunks directly as they arrive
         let packetCount = 0;
+
         audioStream.on('data', (chunk: Buffer) => {
           try {
             packetCount++;
 
-            // Log first few chunks from ffmpeg
+            // Log first few chunks
             if (packetCount <= 5) {
               this.logger.log(
-                `[FFMPEG] Chunk #${packetCount}: ${chunk.length} bytes`,
+                `[SEND] Packet #${packetCount}: ${chunk.length} bytes`,
               );
             }
 
-            // Add chunk to buffer
-            const currentBuffer =
-              this.audioBuffers.get(lobbyId) || Buffer.alloc(0);
-            const newBuffer = Buffer.concat([currentBuffer, chunk]);
-
-            // Send complete chunks
-            let offset = 0;
-            let chunksEmitted = 0;
-            while (offset + this.CHUNK_SIZE <= newBuffer.length) {
-              const packet = newBuffer.slice(offset, offset + this.CHUNK_SIZE);
-              // Broadcast consistent-sized chunks to all clients
-              this.server.to(`lobby-${lobbyId}`).emit('audio-data', packet);
-              offset += this.CHUNK_SIZE;
-              chunksEmitted++;
-            }
-
-            // Log chunking activity
-            if (packetCount <= 5) {
-              this.logger.log(
-                `[CHUNKER] Received ${chunk.length} bytes, buffered ${currentBuffer.length}, emitted ${chunksEmitted} chunks, remaining ${newBuffer.length - offset} bytes`,
-              );
-            }
-
-            // Store remaining bytes for next iteration
-            this.audioBuffers.set(lobbyId, newBuffer.slice(offset));
+            // Send chunks directly - no buffering on server side
+            // The client will handle accumulation if needed
+            this.server.to(`lobby-${lobbyId}`).emit('audio-data', chunk);
           } catch (error) {
             this.logger.error(
               `Error broadcasting audio data to lobby ${lobbyId}:`,
@@ -169,9 +146,6 @@ export class StreamingGateway
     const { lobbyId } = data;
     this.streamingService.stopStream(lobbyId);
     this.logger.log(`Stopped streaming to lobby ${lobbyId}`);
-
-    // Clean up audio buffer for this lobby
-    this.audioBuffers.delete(lobbyId);
 
     // Notify all clients in the lobby that streaming has stopped
     this.server.to(`lobby-${lobbyId}`).emit('stream-stopped', { lobbyId });

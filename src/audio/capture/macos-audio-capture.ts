@@ -166,8 +166,7 @@ export class MacOSAudioCapture implements IAudioCapture {
       this.stopCapture();
 
       // Build ffmpeg arguments for macOS AVFoundation
-      // Buffer size: 4800 samples = 100ms at 48kHz
-      // For s16le format: 4800 samples × 2 channels × 2 bytes = 19,200 bytes per 100ms chunk
+      // Use smaller buffer for smoother, more frequent packets
       const args = [
         '-f',
         'avfoundation', // Input format for macOS
@@ -179,6 +178,10 @@ export class MacOSAudioCapture implements IAudioCapture {
         sampleRate.toString(), // Sample rate (48000 Hz)
         '-ac',
         channels.toString(), // Number of channels (2 = stereo)
+        '-fflags',
+        'nobuffer', // Minimize internal buffering
+        '-avioflags',
+        'direct', // Direct I/O
         '-', // Output to stdout (pipe)
       ];
 
@@ -226,6 +229,17 @@ export class MacOSAudioCapture implements IAudioCapture {
 
       this.recordingStream.on('end', () => {
         this.logger.log('Recording stream ended');
+      });
+
+      // Add diagnostic logging for audio data flow
+      let chunkCount = 0;
+      this.recordingStream.on('data', (chunk: Buffer) => {
+        chunkCount++;
+        if (chunkCount <= 5) {
+          this.logger.log(
+            `[AUDIO CAPTURE] Received chunk #${chunkCount}: ${chunk.length} bytes`,
+          );
+        }
       });
 
       return this.recordingStream;

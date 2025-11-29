@@ -82,6 +82,8 @@ function initializeSocket() {
         reconnectionDelay: reconnectDelay,
         reconnectionDelayMax: 5000,
         timeout: 10000,
+        // Increase buffer size to handle large audio packets
+        maxHttpBufferSize: 1e8, // 100 MB
     });
     socket.on('connect', () => {
         console.log('Connected to server');
@@ -262,6 +264,9 @@ function initializeAudioContext() {
 let audioPacketCount = 0;
 let totalBytesReceived = 0;
 let lastDiagnosticTime = 0;
+// Audio chunk accumulator - collect small chunks into larger buffers
+let audioChunkBuffer = new Int16Array(0);
+let isFirstBuffer = true;
 // Handle incoming audio data
 function handleAudioData(data) {
     // Ignore audio data if we're not in a lobby
@@ -275,13 +280,16 @@ function handleAudioData(data) {
         data.byteLength ||
         (data.buffer ? data.buffer.byteLength : 0);
     totalBytesReceived += byteCount;
-    if (audioPacketCount % 100 === 0) {
+    // Always log first 10 packets to verify chunk sizes, then log every 100
+    if (audioPacketCount <= 10 || audioPacketCount % 100 === 0) {
         const now = Date.now();
-        const elapsed = (now - lastDiagnosticTime) / 1000;
+        const elapsed = (now - lastDiagnosticTime) / 1000 || 1;
         const kbps = (totalBytesReceived * 8) / elapsed / 1000;
-        console.log(`[AUDIO DIAG] Packets: ${audioPacketCount}, Size: ${byteCount} bytes, Bitrate: ${kbps.toFixed(0)} kbps`);
-        lastDiagnosticTime = now;
-        totalBytesReceived = 0;
+        console.log(`[AUDIO DIAG] Packet #${audioPacketCount}: ${byteCount} bytes, Bitrate: ${kbps.toFixed(0)} kbps`);
+        if (audioPacketCount % 100 === 0) {
+            lastDiagnosticTime = now;
+            totalBytesReceived = 0;
+        }
     }
     if (!audioContext) {
         try {
@@ -329,11 +337,36 @@ function handleAudioData(data) {
             console.warn('Received empty audio data');
             return;
         }
-        // Convert Int16 PCM to Float32 for Web Audio API
-        const float32Data = new Float32Array(audioData.length);
-        for (let i = 0; i < audioData.length; i++) {
-            float32Data[i] = audioData[i] / 32768.0; // Convert to -1.0 to 1.0
+        // Accumulate chunks into larger buffers for smoother playback
+        // Concatenate new data with existing buffer
+        const newBuffer = new Int16Array(audioChunkBuffer.length + audioData.length);
+        newBuffer.set(audioChunkBuffer);
+        newBuffer.set(audioData, audioChunkBuffer.length);
+        audioChunkBuffer = newBuffer;
+        // Process accumulated chunks when we have enough data
+        // Accumulate ~20ms of audio for smooth playback with low latency
+        // 48kHz stereo = 480 samples/channel per 10ms = 960 samples per 10ms
+        const MIN_BUFFER_SAMPLES = 1920; // ~20ms minimum (960 samples per channel)
+        if (audioPacketCount <= 10) {
+            console.log(`[ACCUMULATOR] Buffer size: ${audioChunkBuffer.length} samples (${audioChunkBuffer.length * 2} bytes)`);
         }
+        if (audioChunkBuffer.length < MIN_BUFFER_SAMPLES) {
+            // Not enough data yet, wait for more chunks
+            if (audioPacketCount <= 10) {
+                console.log(`[ACCUMULATOR] Waiting for more data (need ${MIN_BUFFER_SAMPLES} samples)`);
+            }
+            return;
+        }
+        if (audioPacketCount <= 10) {
+            console.log(`[ACCUMULATOR] Creating buffer from ${audioChunkBuffer.length} accumulated samples`);
+        }
+        // Convert Int16 PCM to Float32 for Web Audio API
+        const float32Data = new Float32Array(audioChunkBuffer.length);
+        for (let i = 0; i < audioChunkBuffer.length; i++) {
+            float32Data[i] = audioChunkBuffer[i] / 32768.0; // Convert to -1.0 to 1.0
+        }
+        // Clear the accumulator
+        audioChunkBuffer = new Int16Array(0);
         // Create audio buffer
         const samplesPerChannel = float32Data.length / CHANNELS;
         if (samplesPerChannel < 1) {
@@ -376,23 +409,14 @@ function queueAudioBuffer(audioBuffer) {
     }
     // Schedule playback with proper buffering
     const currentTime = audioContext.currentTime;
-    // Initialize nextPlayTime if not set
-    if (nextPlayTime === 0) {
-        // Start playing with minimal latency
-        nextPlayTime = currentTime + SCHEDULE_AHEAD_TIME;
-    }
-    // If we've fallen behind, adjust forward but minimize gaps
-    if (nextPlayTime < currentTime) {
-        // Only skip ahead by a small amount to minimize audio glitches
-        nextPlayTime = currentTime + SCHEDULE_AHEAD_TIME;
-        console.warn('Audio buffer underrun detected, recovering...');
-    }
-    // Prevent buffer queue from growing too large (causes increasing latency)
-    const bufferQueueDuration = nextPlayTime - currentTime;
-    if (bufferQueueDuration > MAX_BUFFER_DURATION) {
-        // Reset to prevent excessive latency buildup
-        nextPlayTime = currentTime + SCHEDULE_AHEAD_TIME;
-        console.warn('Buffer queue too large, resetting to reduce latency');
+    // Simplified scheduling - just append buffers continuously
+    if (nextPlayTime === 0 || nextPlayTime < currentTime) {
+        // Start immediately or catch up
+        nextPlayTime = currentTime + 0.1; // Small 100ms initial buffer
+        if (isFirstBuffer) {
+            console.log(`[PLAYBACK] Starting playback`);
+            isFirstBuffer = false;
+        }
     }
     // Schedule this buffer to play at the next available time
     source.start(nextPlayTime);
