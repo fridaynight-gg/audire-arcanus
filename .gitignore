@@ -7,9 +7,9 @@
 /build/*.png
 
 # NestJS compiled files
-*.js
-*.js.map
-*.d.ts
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
 # But keep config and client files
 !*.config.js
 !*.config.mjs

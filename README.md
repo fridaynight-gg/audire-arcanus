@@ -4,29 +4,30 @@
 
 **Audire Arcanus** is an Electron desktop application that captures audio from your system and streams it to multiple browser-based listeners with exceptional quality. Perfect for shared listening sessions, remote audio monitoring, or collaborative music experiences.
 
-![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
-![License](https://img.shields.io/badge/license-UNLICENSED-red.svg)
+![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-orange.svg)
+![Status](https://img.shields.io/badge/status-alpha-yellow.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## Features
 
 - **High-Fidelity Streaming** - 48kHz/16-bit PCM audio over WebSockets
-- **Cross-Platform** - macOS (ARM64 & Intel), Windows, and Linux support
+- **Cross-Platform** - macOS (ARM64 & Intel), Windows, and Linux support (planned)
 - **Zero Dependencies** - Bundled ffmpeg, no external installation required
 - **Desktop GUI** - Clean Electron interface for stream management
 - **Browser Clients** - Listeners join via simple web interface
 - **Multi-Lobby Support** - Create and manage multiple streaming rooms
 - **Real-Time Stats** - Monitor bitrate, listeners, data transfer, and stream duration
-- **Join Codes** - Easy 4-character codes for quick lobby access
+- **Join Codes** - Easy 6-character codes for quick lobby access
 - **Event Logging** - Track listener activity in real-time
 
 ## Quick Start
 
 ### For Users (Prebuilt App)
 
-1. Download the latest release for your platform:
-   - macOS (Apple Silicon): `Audire Arcanus-0.0.1-arm64.dmg`
-   - macOS (Intel): `Audire Arcanus-0.0.1.dmg`
-   - Windows: `Audire Arcanus Setup 0.0.1.exe`
+1. Download the latest alpha release for your platform:
+   - macOS (Apple Silicon): `Audire Arcanus-0.1.0-alpha.1-arm64.dmg`
+   - macOS (Intel): `Audire Arcanus-0.1.0-alpha.1.dmg`
+   - Windows: `Audire Arcanus Setup 0.1.0-alpha.1.exe`
 
 2. Install and launch the application
 
@@ -158,15 +159,15 @@ npm run test:cov           # Test coverage
 
 **Audio Sources:**
 
-- `Enter` - Select audio source
+- `Space` - Select audio source
 
 **Lobbies:**
 
 - `n` - Create new lobby
 - `r` - Rename selected lobby
-- `c` - Copy join code
-- `Enter` - Start/stop streaming
-- `Delete` - Close lobby
+- `y` - Copy join code
+- `s` - Start/stop streaming
+- `c` - Close lobby
 
 **Listeners:**
 
@@ -175,7 +176,7 @@ npm run test:cov           # Test coverage
 **Global:**
 
 - `Cmd/Ctrl+Shift+I` - Toggle DevTools
-- `Cmd/Ctrl+Q` - Quit
+- `q` - Quit
 
 ## API Reference
 
@@ -245,9 +246,11 @@ Current streaming format (uncompressed PCM):
 
 - Built-in microphone, external audio interfaces work out-of-the-box
 - For system audio capture, install [BlackHole](https://github.com/ExistentialAudio/BlackHole):
+
   ```bash
   brew install blackhole-2ch
   ```
+
   Then create a Multi-Output Device in Audio MIDI Setup
 
 **Permissions:**
@@ -285,9 +288,16 @@ The build system uses `electron-builder` to create platform-specific installers.
 
 ```
 release/
-├── Audire Arcanus-0.0.1-arm64.dmg        # macOS Apple Silicon
-├── Audire Arcanus-0.0.1.dmg              # macOS Intel
-└── Audire Arcanus Setup 0.0.1.exe        # Windows
+├── Audire Arcanus-0.1.0-alpha.1-arm64.dmg        # macOS Apple Silicon
+├── Audire Arcanus-0.1.0-alpha.1.dmg              # macOS Intel
+└── Audire Arcanus Setup 0.1.0-alpha.1.exe        # Windows
+```
+
+release/
+├── Audire Arcanus-0.0.1-arm64.dmg # macOS Apple Silicon
+├── Audire Arcanus-0.0.1.dmg # macOS Intel
+└── Audire Arcanus Setup 0.0.1.exe # Windows
+
 ```
 
 **Bundled Resources:**
@@ -316,7 +326,7 @@ Follow the guidelines in `AGENTS.md`:
 
 ## Roadmap
 
-**Current (v0.0.1):**
+**Current (v0.1.0-alpha.1):**
 
 - ✅ Cross-platform audio capture
 - ✅ WebSocket streaming
@@ -328,11 +338,9 @@ Follow the guidelines in `AGENTS.md`:
 **Planned:**
 
 - [ ] Opus audio compression (80% bandwidth reduction)
-- [ ] Automatic reconnection with stream recovery
+- [ ] Linux AppImage release
 - [ ] Audio effects (EQ, compressor, limiter)
-- [ ] Recording to file
 - [ ] HTTPS/WSS support
-- [ ] User authentication
 - [ ] Mobile-responsive client
 
 ## Troubleshooting
@@ -346,8 +354,7 @@ Follow the guidelines in `AGENTS.md`:
 **Listeners can't connect:**
 
 - Check firewall settings (allow port 5551)
-- Ensure host and listeners are on the same network
-- Try using host's IP address instead of localhost
+- Ensure host and listeners are on the same network or port is properly forwarded
 
 **Audio crackling/stuttering:**
 
@@ -357,8 +364,17 @@ Follow the guidelines in `AGENTS.md`:
 
 ## License
 
-UNLICENSED - Private project
+MIT License - see [LICENSE](LICENSE) file for details
+
+This means you're free to:
+- ✅ Use commercially
+- ✅ Modify and distribute
+- ✅ Use privately
+- ✅ Create derivative works
+
+No warranty is provided.
 
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+```

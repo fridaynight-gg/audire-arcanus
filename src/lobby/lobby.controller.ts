@@ -111,7 +111,7 @@ export class LobbyController {
     this.statsService.removeLobbyStats(id);
 
     // Finally close the lobby (removes listeners and lobby data)
-    const success = this.lobbyService.closeLobby(id);
+    this.lobbyService.closeLobby(id);
 
     return { success: true };
   }
