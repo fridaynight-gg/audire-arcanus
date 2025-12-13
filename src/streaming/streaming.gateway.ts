@@ -95,23 +95,42 @@ export class StreamingGateway
       if (success) {
         this.logger.log(`Started streaming to lobby ${lobbyId}`);
 
-        // Set up audio data forwarding - send chunks directly as they arrive
+        // Buffer audio chunks and send every ~1 second for smooth playback
+        let audioBuffer: Buffer[] = [];
+        let bufferStartTime = Date.now();
         let packetCount = 0;
+        const BUFFER_DURATION_MS = 1000; // 1 second buffer
 
         audioStream.on('data', (chunk: Buffer) => {
           try {
-            packetCount++;
+            // Accumulate chunks
+            audioBuffer.push(chunk);
 
-            // Log first few chunks
-            if (packetCount <= 5) {
-              this.logger.log(
-                `[SEND] Packet #${packetCount}: ${chunk.length} bytes`,
-              );
+            const elapsed = Date.now() - bufferStartTime;
+
+            // Send buffered audio every 1 second
+            if (elapsed >= BUFFER_DURATION_MS) {
+              packetCount++;
+
+              // Concatenate all chunks into one buffer
+              const completeChunk = Buffer.concat(audioBuffer);
+
+              // Log first few packets
+              if (packetCount <= 5) {
+                this.logger.log(
+                  `[SEND] Packet #${packetCount}: ${completeChunk.length} bytes (${audioBuffer.length} chunks combined)`,
+                );
+              }
+
+              // Send the 1-second audio chunk
+              this.server
+                .to(`lobby-${lobbyId}`)
+                .emit('audio-data', completeChunk);
+
+              // Reset buffer
+              audioBuffer = [];
+              bufferStartTime = Date.now();
             }
-
-            // Send chunks directly - no buffering on server side
-            // The client will handle accumulation if needed
-            this.server.to(`lobby-${lobbyId}`).emit('audio-data', chunk);
           } catch (error) {
             this.logger.error(
               `Error broadcasting audio data to lobby ${lobbyId}:`,

@@ -15,16 +15,11 @@ interface AudioContext {
 const API_BASE: string = 'http://localhost:5551';
 const SOCKET_URL: string = 'http://localhost:5551';
 
-// Audio Configuration (must match server)
-const SAMPLE_RATE = 48000;
-const CHANNELS = 2;
-const BIT_DEPTH = 16;
-
-// Audio buffering configuration for smooth playback
-const BUFFER_SIZE = 0.1; // 100ms of audio per buffer for smooth playback
-const SCHEDULE_AHEAD_TIME = 0.05; // Schedule audio 50ms ahead (reduced from 200ms)
-const MAX_BUFFER_DURATION = 0.5; // Maximum buffer queue duration (500ms)
-const MIN_BUFFER_DURATION = 0.1; // Minimum buffer before playback (100ms)
+// Audio Configuration - MP3 streaming at 320kbps
+// Server sends 1-second MP3 chunks for smooth playback
+const SAMPLE_RATE = 44100; // MP3 standard sample rate
+const CHANNELS = 2; // Stereo
+const BIT_DEPTH = 16; // Not used for MP3, kept for compatibility
 
 // Types
 interface LobbyData {
@@ -339,180 +334,109 @@ function initializeAudioContext() {
 // Diagnostic counters
 let audioPacketCount = 0;
 let totalBytesReceived = 0;
-let lastDiagnosticTime = 0;
+let lastDiagnosticTime = Date.now();
 
-// Audio chunk accumulator - collect small chunks into larger buffers
-let audioChunkBuffer: Int16Array = new Int16Array(0);
-let isFirstBuffer: boolean = true;
-
-// Handle incoming audio data
+// Handle incoming MP3 audio data - simplified approach
 function handleAudioData(data) {
   // Ignore audio data if we're not in a lobby
   if (!currentLobby) {
-    console.debug('Ignoring audio data - not in a lobby');
+    console.debug('[AUDIO] Ignoring audio data - not in a lobby');
     return;
   }
 
-  // Diagnostic logging (every 100 packets)
+  // Diagnostic logging
   audioPacketCount++;
   const byteCount =
     data.length ||
     data.byteLength ||
     (data.buffer ? data.buffer.byteLength : 0);
   totalBytesReceived += byteCount;
+  bytesReceived += byteCount;
 
-  // Always log first 10 packets to verify chunk sizes, then log every 100
-  if (audioPacketCount <= 10 || audioPacketCount % 100 === 0) {
+  // Log every 10 packets
+  if (audioPacketCount % 10 === 0) {
     const now = Date.now();
     const elapsed = (now - lastDiagnosticTime) / 1000 || 1;
     const kbps = (totalBytesReceived * 8) / elapsed / 1000;
     console.log(
-      `[AUDIO DIAG] Packet #${audioPacketCount}: ${byteCount} bytes, Bitrate: ${kbps.toFixed(0)} kbps`,
+      `[AUDIO] Packet #${audioPacketCount}: ${byteCount} bytes, Bitrate: ${kbps.toFixed(0)} kbps`,
     );
-    if (audioPacketCount % 100 === 0) {
-      lastDiagnosticTime = now;
-      totalBytesReceived = 0;
-    }
+    lastDiagnosticTime = now;
+    totalBytesReceived = 0;
   }
 
+  // Initialize audio context if needed
   if (!audioContext) {
     try {
       initializeAudioContext();
     } catch (error) {
-      console.error('Failed to initialize audio context:', error);
+      console.error('[AUDIO] Failed to initialize audio context:', error);
       return;
     }
-  }
-
-  if (!audioContext || audioContext.state === 'closed') {
-    console.warn('Audio context not available');
-    return;
   }
 
   // Resume audio context if suspended (Chrome autoplay policy)
-  if (audioContext.state === 'suspended') {
+  if (audioContext && audioContext.state === 'suspended') {
     audioContext.resume().catch((error) => {
-      console.error('Failed to resume audio context:', error);
+      console.error('[AUDIO] Failed to resume audio context:', error);
     });
   }
 
-  // Count bytes received (already calculated above)
-  bytesReceived += byteCount;
-
-  // Log first few packets to diagnose chunk size
-  if (audioPacketCount <= 5) {
-    console.log(
-      `[AUDIO] Packet #${audioPacketCount}: ${byteCount} bytes, type: ${data.constructor.name}`,
-    );
-  }
-
   try {
-    // Convert Buffer/ArrayBuffer to Int16Array
-    let audioData: Int16Array;
+    // Convert to base64 data URL for MP3 playback
+    let base64String: string;
+
     if (data instanceof ArrayBuffer) {
-      audioData = new Int16Array(data);
+      // Convert ArrayBuffer to base64
+      const bytes = new Uint8Array(data);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      base64String = 'data:audio/mp3;base64,' + btoa(binary);
     } else if (data.buffer) {
-      audioData = new Int16Array(data.buffer);
-    } else if (Array.isArray(data)) {
-      audioData = new Int16Array(data);
+      // Already a buffer, convert to base64
+      const bytes = new Uint8Array(data.buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      base64String = 'data:audio/mp3;base64,' + btoa(binary);
+    } else if (typeof data === 'string') {
+      // Already base64
+      base64String = data.startsWith('data:')
+        ? data
+        : 'data:audio/mp3;base64,' + data;
     } else {
-      console.warn('Unknown audio data format:', typeof data);
+      console.warn('[AUDIO] Unknown audio data format:', typeof data);
       return;
     }
 
-    // Validate audio data
-    if (audioData.length === 0) {
-      console.warn('Received empty audio data');
-      return;
+    // Create and play audio element
+    const audio = new Audio(base64String);
+
+    // Connect to gain node for volume control
+    if (audioContext && gainNode) {
+      const source = audioContext.createMediaElementSource(audio);
+      source.connect(gainNode);
     }
 
-    // Accumulate chunks into larger buffers for smoother playback
-    // Concatenate new data with existing buffer
-    const newBuffer = new Int16Array(
-      audioChunkBuffer.length + audioData.length,
-    );
-    newBuffer.set(audioChunkBuffer);
-    newBuffer.set(audioData, audioChunkBuffer.length);
-    audioChunkBuffer = newBuffer;
+    // Play the audio
+    audio.play().catch((error) => {
+      console.error('[AUDIO] Playback error:', error);
+    });
 
-    // Process accumulated chunks when we have enough data
-    // Accumulate ~20ms of audio for smooth playback with low latency
-    // 48kHz stereo = 480 samples/channel per 10ms = 960 samples per 10ms
-    const MIN_BUFFER_SAMPLES = 1920; // ~20ms minimum (960 samples per channel)
-
-    if (audioPacketCount <= 10) {
-      console.log(
-        `[ACCUMULATOR] Buffer size: ${audioChunkBuffer.length} samples (${audioChunkBuffer.length * 2} bytes)`,
-      );
+    if (audioPacketCount <= 5) {
+      console.log(`[AUDIO] Playing MP3 chunk #${audioPacketCount}`);
     }
-
-    if (audioChunkBuffer.length < MIN_BUFFER_SAMPLES) {
-      // Not enough data yet, wait for more chunks
-      if (audioPacketCount <= 10) {
-        console.log(
-          `[ACCUMULATOR] Waiting for more data (need ${MIN_BUFFER_SAMPLES} samples)`,
-        );
-      }
-      return;
-    }
-
-    if (audioPacketCount <= 10) {
-      console.log(
-        `[ACCUMULATOR] Creating buffer from ${audioChunkBuffer.length} accumulated samples`,
-      );
-    }
-
-    // Convert Int16 PCM to Float32 for Web Audio API
-    const float32Data = new Float32Array(audioChunkBuffer.length);
-    for (let i = 0; i < audioChunkBuffer.length; i++) {
-      float32Data[i] = audioChunkBuffer[i] / 32768.0; // Convert to -1.0 to 1.0
-    }
-
-    // Clear the accumulator
-    audioChunkBuffer = new Int16Array(0);
-
-    // Create audio buffer
-    const samplesPerChannel = float32Data.length / CHANNELS;
-
-    if (samplesPerChannel < 1) {
-      console.warn('Invalid audio data: not enough samples');
-      return;
-    }
-
-    // CRITICAL: Create buffer at SOURCE sample rate (48kHz), not context sample rate!
-    // The Web Audio API will automatically resample to the context's sample rate during playback
-    // If we use the wrong sample rate here, audio will be time-stretched = robotic sound
-    const audioBuffer = audioContext.createBuffer(
-      CHANNELS,
-      samplesPerChannel,
-      SAMPLE_RATE, // Use 48kHz (source rate), NOT audioContext.sampleRate
-    );
-
-    // Log buffer creation for first few packets
-    if (audioPacketCount <= 3) {
-      console.log(
-        `[AUDIO] Created buffer: ${samplesPerChannel} samples/channel, ${audioBuffer.duration.toFixed(3)}s duration, ${CHANNELS} channels, ${audioBuffer.sampleRate}Hz`,
-      );
-    }
-
-    // Fill channels (deinterleave stereo: L R L R -> L L L... R R R...)
-    for (let channel = 0; channel < CHANNELS; channel++) {
-      const channelData = audioBuffer.getChannelData(channel);
-      for (let i = 0; i < samplesPerChannel; i++) {
-        channelData[i] = float32Data[i * CHANNELS + channel];
-      }
-    }
-
-    // Queue for playback
-    queueAudioBuffer(audioBuffer);
   } catch (error) {
-    console.error('Error processing audio data:', error);
-    showError('Audio processing error. Stream may be interrupted.');
+    console.error('[AUDIO] Error processing audio data:', error);
   }
 }
 
-// Queue audio buffer for playback with improved scheduling
+// Removed queueAudioBuffer - not needed for MP3 playback
 function queueAudioBuffer(audioBuffer) {
+  // Legacy function - kept for compatibility but not used with MP3
   const source = audioContext.createBufferSource();
   source.buffer = audioBuffer;
 
@@ -530,10 +454,7 @@ function queueAudioBuffer(audioBuffer) {
   if (nextPlayTime === 0 || nextPlayTime < currentTime) {
     // Start immediately or catch up
     nextPlayTime = currentTime + 0.1; // Small 100ms initial buffer
-    if (isFirstBuffer) {
-      console.log(`[PLAYBACK] Starting playback`);
-      isFirstBuffer = false;
-    }
+    console.log(`[PLAYBACK] Starting playback`);
   }
 
   // Schedule this buffer to play at the next available time

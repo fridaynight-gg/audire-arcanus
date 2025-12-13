@@ -155,7 +155,7 @@ export class MacOSAudioCapture implements IAudioCapture {
     } = options;
 
     this.logger.log(
-      `Starting audio capture from ${deviceId}: ${sampleRate}Hz, ${channels}ch, ${bitDepth}bit`,
+      `Starting audio capture from ${deviceId}: MP3 320kbps, ${channels}ch stereo`,
     );
 
     const ffmpegPath = this.getFfmpegPath();
@@ -166,22 +166,22 @@ export class MacOSAudioCapture implements IAudioCapture {
       this.stopCapture();
 
       // Build ffmpeg arguments for macOS AVFoundation
-      // Use smaller buffer for smoother, more frequent packets
+      // Encode to MP3 at 320kbps with 1-second chunks for smooth streaming
       const args = [
         '-f',
         'avfoundation', // Input format for macOS
         '-i',
         deviceId, // Device ID (e.g., :0, :1)
         '-f',
-        's16le', // Output format: signed 16-bit little-endian PCM
+        'mp3', // Output format: MP3
         '-ar',
-        sampleRate.toString(), // Sample rate (48000 Hz)
+        '44100', // Sample rate: 44.1kHz (standard for MP3)
         '-ac',
         channels.toString(), // Number of channels (2 = stereo)
-        '-fflags',
-        'nobuffer', // Minimize internal buffering
-        '-avioflags',
-        'direct', // Direct I/O
+        '-b:a',
+        '320k', // Bitrate: 320kbps (high quality)
+        '-bufsize',
+        '320k', // Buffer size for 1-second chunks
         '-', // Output to stdout (pipe)
       ];
 
