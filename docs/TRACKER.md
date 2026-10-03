@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.4` macOS mic capture
+**Now:** `2.6` CLI stream start fixture/mic
 
 **Goal:** phase 4 (app source + harden)
 
@@ -70,7 +70,7 @@ Update this file on every item. Ritual: one id, then commit.
 | ---- | ------------------------------ | -------------------- | ---------------------- |
 | 0.10 | Rust crate help + fixture sine | done                 | cargo release + --help |
 | 2.3  | Effect supervisor              | done                 | spawn fixture sine; abort on stop |
-| 2.4  | macOS mic                      | todo                 |                        |
+| 2.4  | macOS mic                      | done                 | --list mics; --mic framed 3840; GET /api/sources |
 | 3.1  | list apps                      | todo                 |                        |
 | 3.2  | capture app                    | todo                 |                        |
 | 3.3  | PermissionDenied               | todo                 |                        |
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: Worklet + wasm Opus. Playwright player-state live.
+- 2026-10-03: cpal mic list+capture. GET /api/sources. stream start source mic.

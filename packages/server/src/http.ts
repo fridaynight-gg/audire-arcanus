@@ -1,6 +1,8 @@
 import { Effect, Layer } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { BunHttpServer } from "@effect/platform-bun";
+import { listSources } from "@audire/audio";
+import { CaptureUnavailable } from "@audire/domain";
 import {
   CreateLobby,
   IdParam,
@@ -115,13 +117,27 @@ const Kick = HttpRouter.add(
   ),
 );
 
+const ListSources = HttpRouter.add(
+  "GET",
+  "/api/sources",
+  Effect.gen(function* () {
+    const sources = yield* Effect.tryPromise({
+      try: listSources,
+      catch: (cause) => new CaptureUnavailable({ reason: String(cause) }),
+    });
+    return jsonOk(sources);
+  }).pipe(
+    Effect.catchTag("CaptureUnavailable", () => Effect.succeed(jsonErr("CaptureUnavailable", 500))),
+  ),
+);
+
 const StartStream = HttpRouter.add(
   "POST",
   "/api/stream/start",
   Effect.gen(function* () {
     const streamer = yield* Streamer;
     const body = yield* HttpServerRequest.schemaBodyJson(StreamLobby);
-    yield* streamer.start(body.lobbyId);
+    yield* streamer.start(body.lobbyId, body.source);
     return jsonOk({ ok: true });
   }).pipe(
     Effect.catchTag("LobbyNotFound", () => Effect.succeed(jsonErr("LobbyNotFound", 404))),
@@ -150,6 +166,7 @@ const Routes = Layer.mergeAll(
   ListListeners,
   Kick,
   Join,
+  ListSources,
   StartStream,
   StopStream,
   WsRoute,

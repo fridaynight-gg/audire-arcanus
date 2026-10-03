@@ -22,6 +22,18 @@ export class IdParam extends Schema.Class<IdParam>("IdParam")({
   id: LobbyId,
 }) {}
 
+export class StreamMic extends Schema.TaggedClass<StreamMic>("StreamMic")("mic", {
+  id: Schema.String,
+}) {}
+
+export class StreamFixture extends Schema.TaggedClass<StreamFixture>("StreamFixture")("fixture", {
+  name: Schema.Literals(["sine"]),
+}) {}
+
+export const StreamSource = Schema.Union([StreamMic, StreamFixture]);
+export type StreamSource = typeof StreamSource.Type;
+
 export class StreamLobby extends Schema.Class<StreamLobby>("StreamLobby")({
   lobbyId: LobbyId,
+  source: Schema.optional(StreamSource),
 }) {}

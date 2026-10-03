@@ -2,6 +2,7 @@ const help = `audire
   serve              start HTTP on :5551
   lobby create NAME  create a lobby
   lobby list         list lobbies
+  sources            list capture sources
   --help
 `;
 
@@ -16,6 +17,12 @@ const [, , cmd, sub, ...rest] = process.argv;
 
 if (cmd === "lobby" && sub === "list") {
   const res = await fetch(`${base}/api/lobbies`);
+  console.log(await res.text());
+  process.exit(0);
+}
+
+if (cmd === "sources") {
+  const res = await fetch(`${base}/api/sources`);
   console.log(await res.text());
   process.exit(0);
 }

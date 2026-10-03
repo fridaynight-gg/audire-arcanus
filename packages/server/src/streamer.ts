@@ -1,16 +1,26 @@
 import { Context, Effect, Layer } from "effect";
 import { CaptureUnavailable, type LobbyId, LobbyNotFound } from "@audire/domain";
-import { encodeFrame, encodeMediaPayload, FrameType } from "@audire/protocol";
-import { startFixtureSine, createOpusEncoder } from "@audire/audio";
+import { encodeFrame, encodeMediaPayload, FrameType, type StreamSource } from "@audire/protocol";
+import { startCapture, createOpusEncoder } from "@audire/audio";
 import { LobbyRepo } from "./lobby-repo.ts";
 import { WsHub } from "./ws-hub.ts";
 
 const encoder = new TextEncoder();
 
+const captureArgs = (source: StreamSource | undefined): Array<string> => {
+  if (source?._tag === "mic") {
+    return ["--mic", source.id];
+  }
+  return ["--fixture", "sine"];
+};
+
 export class Streamer extends Context.Service<
   Streamer,
   {
-    readonly start: (lobbyId: LobbyId) => Effect.Effect<void, LobbyNotFound | CaptureUnavailable>;
+    readonly start: (
+      lobbyId: LobbyId,
+      source: StreamSource | undefined,
+    ) => Effect.Effect<void, LobbyNotFound | CaptureUnavailable>;
     readonly stop: (lobbyId: LobbyId) => Effect.Effect<void>;
   }
 >()("@audire/Streamer") {
@@ -22,7 +32,7 @@ export class Streamer extends Context.Service<
       const running = new Map<LobbyId, AbortController>();
 
       return {
-        start: (lobbyId: LobbyId) =>
+        start: (lobbyId: LobbyId, source: StreamSource | undefined) =>
           Effect.gen(function* () {
             yield* repo.get(lobbyId);
             const existing = running.get(lobbyId);
@@ -39,7 +49,7 @@ export class Streamer extends Context.Service<
                   let seq = 0;
                   let started = false;
                   try {
-                    await startFixtureSine(ac.signal, async (pcm) => {
+                    await startCapture(captureArgs(source), ac.signal, async (pcm) => {
                       if (!started) {
                         started = true;
                         const body = encoder.encode(
