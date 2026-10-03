@@ -3,6 +3,8 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { BunHttpServer } from "@effect/platform-bun";
 import { CreateLobby, IdParam, JoinLobby, KickListener, RenameLobby } from "@audire/protocol";
 import { LobbyRepo } from "./lobby-repo.ts";
+import { WsHub } from "./ws-hub.ts";
+import { WsRoute } from "./ws.ts";
 
 const jsonOk = (body: unknown) => HttpServerResponse.jsonUnsafe(body);
 
@@ -115,9 +117,11 @@ const Routes = Layer.mergeAll(
   ListListeners,
   Kick,
   Join,
+  WsRoute,
 );
 
 export const HttpLive = HttpRouter.serve(Routes).pipe(
   Layer.provide(LobbyRepo.layer),
+  Layer.provide(WsHub.layer),
   Layer.provide(BunHttpServer.layer({ hostname: "0.0.0.0", port: 5551 })),
 );
