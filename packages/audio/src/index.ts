@@ -1,1 +1,1 @@
-export const packageName = "@audire/audio" as const
+export const packageName = "@audire/audio" as const;

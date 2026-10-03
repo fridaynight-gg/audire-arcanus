@@ -9,9 +9,5 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "references": [
-    { "path": "../domain" },
-    { "path": "../protocol" },
-    { "path": "../audio" }
-  ]
+  "references": [{ "path": "../domain" }, { "path": "../protocol" }, { "path": "../audio" }]
 }

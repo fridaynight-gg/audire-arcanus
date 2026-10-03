@@ -2,16 +2,16 @@
   "name": "@audire/cli",
   "version": "0.2.0",
   "private": true,
-  "type": "module",
   "bin": {
     "audire": "./src/main.ts"
   },
+  "type": "module",
   "scripts": {
     "start": "bun src/main.ts"
   },
   "dependencies": {
-    "@audire/server": "workspace:*",
     "@audire/domain": "workspace:*",
-    "@audire/protocol": "workspace:*"
+    "@audire/protocol": "workspace:*",
+    "@audire/server": "workspace:*"
   }
 }

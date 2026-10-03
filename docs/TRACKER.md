@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `0.4`
+**Now:** `0.5`
 
 **Goal:** phase 4 (app source + harden)
 
@@ -20,7 +20,7 @@ Update this file on every item. Ritual: one id, then commit.
 | id | item | status | proof |
 | --- | --- | --- | --- |
 | 0.3 | Bun workspace + TS 7 + Vite 8 + React 19 | done | typescript 7.0.2, vite 8.3.2, react 19.3.0, tsc -b |
-| 0.4 | Oxlint Oxfmt anti-slop tsgo | todo | |
+| 0.4 | Oxlint Oxfmt anti-slop tsgo | done | oxlint 1.86 + vendored anti-slop + effect-tsgo patch |
 | 0.5 | Package skeletons | todo | |
 | 0.11 | Delete kill-list tree from this branch | todo | after 0.5 so git still has a compile target |
 
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: 0.1 written on rewrite/effect-opentui. Root AGENTS.md blocked.
 - 2026-10-03: 0.2 done. Goal locked through phase 4. Defaults kept (Bun workspaces, 0.0.0.0:5551, apps/cli).
-- 2026-10-03: 0.3 Bun workspace. TS 7.0.2 / Vite 8.3.2 / React 19.3.0.
+- 2026-10-03: 0.4 oxlint/oxfmt/anti-slop/@effect/tsgo.

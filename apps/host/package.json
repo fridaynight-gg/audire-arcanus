@@ -10,7 +10,7 @@
     "start": "bun src/main.ts"
   },
   "dependencies": {
-    "@audire/server": "workspace:*",
-    "@audire/domain": "workspace:*"
+    "@audire/domain": "workspace:*",
+    "@audire/server": "workspace:*"
   }
 }

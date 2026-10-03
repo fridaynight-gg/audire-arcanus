@@ -1,0 +1,14 @@
+{
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "target/**",
+    "tools/oxlint/**",
+    "src/**",
+    "electron/**",
+    "client/**",
+    "test/**",
+    "release/**",
+    "build/**"
+  ]
+}
