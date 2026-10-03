@@ -1,5 +1,12 @@
 {
-  "extends": "./tsconfig.base.json",
   "files": [],
-  "references": []
+  "references": [
+    { "path": "packages/domain" },
+    { "path": "packages/protocol" },
+    { "path": "packages/audio" },
+    { "path": "packages/server" },
+    { "path": "apps/cli" },
+    { "path": "apps/host" },
+    { "path": "apps/web" }
+  ]
 }

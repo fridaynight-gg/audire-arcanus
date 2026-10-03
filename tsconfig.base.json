@@ -1,9 +1,11 @@
 {
+  "$schema": "https://raw.githubusercontent.com/Effect-TS/language-service/refs/heads/main/schema.json",
   "compilerOptions": {
     "strict": true,
     "target": "ES2025",
     "lib": ["ES2025"],
-    "module": "ESNext",
+    "types": ["bun"],
+    "module": "preserve",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "jsx": "react-jsx",
@@ -15,8 +17,9 @@
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
+    "noUnusedLocals": true,
     "forceConsistentCasingInFileNames": true,
     "rewriteRelativeImportExtensions": true,
-    "erasableSyntaxOnly": true
+    "plugins": [{ "name": "@effect/language-service" }]
   }
 }
