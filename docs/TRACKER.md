@@ -50,12 +50,13 @@ Update this file on every item. Ritual: one id, then commit.
 
 ## Lane E — Host TUI
 
-| id  | item                 | status | proof                                    |
-| --- | -------------------- | ------ | ---------------------------------------- |
-| 0.7 | OpenTUI hello        | done   | host starts HttpLive + renderer          |
-| 1.6 | lobby pane           | done   | pane tests; n/up/down; poll /api/lobbies |
-| 2.7 | sources + start/stop | done   | s/x/left/right; pane tests               |
-| 1.9 | rename roster kick   | done   | pane tests: n prompt, r, k, tab panels   |
+| id   | item                 | status | proof                                    |
+| ---- | -------------------- | ------ | ---------------------------------------- |
+| 0.7  | OpenTUI hello        | done   | host starts HttpLive + renderer          |
+| 1.6  | lobby pane           | done   | pane tests; n/up/down; poll /api/lobbies |
+| 2.7  | sources + start/stop | done   | s/x/left/right; pane tests               |
+| 1.9  | rename roster kick   | done   | pane tests: n prompt, r, k, tab panels   |
+| 1.10 | theme picker         | done   | pane tests: t modal, 33 OpenCode names   |
 
 ## Lane F — Web
 
@@ -88,6 +89,7 @@ Update this file on every item. Ritual: one id, then commit.
 
 ## Log
 
+- 2026-10-04: t opens Themes modal (OpenCode default ids); arrows preview, enter apply, esc cancel.
 - 2026-10-04: q quits the host (shutdown + TUI destroy). TUI Tokyo Night panels; n/r name, roster, k kick, y copy, c close.
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.

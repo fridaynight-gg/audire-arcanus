@@ -20,18 +20,9 @@ import {
   type SourceRow,
   type StatsRow,
 } from "./pane.ts";
+import { paletteOf, themeNames } from "./theme.ts";
 
-const theme = {
-  bg: "#1a1b26",
-  panel: "#16161e",
-  header: "#24283b",
-  fg: "#c0caf5",
-  dim: "#565f89",
-  border: "#3b4261",
-  focus: "#7aa2f7",
-  blue: "#7aa2f7",
-  yellow: "#e0af68",
-};
+let colors = paletteOf("tokyonight");
 
 const loopback = process.argv.includes("--loopback");
 
@@ -63,7 +54,7 @@ let shutdownStarted = false;
 
 const renderer = await createCliRenderer({
   exitOnCtrlC: true,
-  backgroundColor: theme.bg,
+  backgroundColor: colors.bg,
   useMouse: true,
 });
 
@@ -93,10 +84,10 @@ const panel = (title: string, grow: number): [BoxRenderable, TextRenderable] => 
   const box = new BoxRenderable(renderer, {
     border: true,
     title,
-    titleColor: theme.fg,
-    backgroundColor: theme.panel,
-    borderColor: theme.border,
-    focusedBorderColor: theme.focus,
+    titleColor: colors.fg,
+    backgroundColor: colors.panel,
+    borderColor: colors.border,
+    focusedBorderColor: colors.focus,
     flexGrow: grow,
     flexDirection: "column",
     padding: 1,
@@ -104,7 +95,7 @@ const panel = (title: string, grow: number): [BoxRenderable, TextRenderable] => 
 
   const text = new TextRenderable(renderer, {
     content: "",
-    fg: theme.fg,
+    fg: colors.fg,
     wrapMode: "word",
     flexGrow: 1,
   });
@@ -117,21 +108,21 @@ const panel = (title: string, grow: number): [BoxRenderable, TextRenderable] => 
 const shell = new BoxRenderable(renderer, {
   flexGrow: 1,
   flexDirection: "column",
-  backgroundColor: theme.bg,
+  backgroundColor: colors.bg,
 });
 
 const header = new BoxRenderable(renderer, {
   height: 3,
-  backgroundColor: theme.header,
+  backgroundColor: colors.header,
   border: true,
-  borderColor: theme.border,
+  borderColor: colors.border,
   justifyContent: "center",
   alignItems: "center",
 });
 
 const headerText = new TextRenderable(renderer, {
   content: `AUDIRE ARCANUS    http://${host}:5551`,
-  fg: theme.blue,
+  fg: colors.blue,
 });
 
 header.add(headerText);
@@ -139,13 +130,13 @@ header.add(headerText);
 const top = new BoxRenderable(renderer, {
   flexGrow: 2,
   flexDirection: "row",
-  backgroundColor: theme.bg,
+  backgroundColor: colors.bg,
 });
 
 const bottom = new BoxRenderable(renderer, {
   flexGrow: 3,
   flexDirection: "row",
-  backgroundColor: theme.bg,
+  backgroundColor: colors.bg,
 });
 
 const [sourcesBox, sourcesText] = panel("Sources", 1);
@@ -170,13 +161,13 @@ bottom.add(logBox);
 
 const footer = new BoxRenderable(renderer, {
   height: 3,
-  backgroundColor: theme.header,
+  backgroundColor: colors.header,
   border: true,
-  borderColor: theme.border,
+  borderColor: colors.border,
   padding: 1,
 });
 
-const footerText = new TextRenderable(renderer, { content: "", fg: theme.yellow });
+const footerText = new TextRenderable(renderer, { content: "", fg: colors.yellow });
 
 footer.add(footerText);
 
@@ -189,6 +180,35 @@ shell.add(bottom);
 shell.add(footer);
 
 renderer.root.add(shell);
+
+const themeBox = new BoxRenderable(renderer, {
+  title: "Themes",
+  titleAlignment: "center",
+  border: true,
+  position: "absolute",
+  zIndex: 20,
+  width: 36,
+  height: 16,
+  left: "32%",
+  top: "18%",
+  visible: false,
+  padding: 1,
+  flexDirection: "column",
+  backgroundColor: colors.panel,
+  borderColor: colors.focus,
+  titleColor: colors.fg,
+});
+
+const themeText = new TextRenderable(renderer, {
+  content: "",
+  fg: colors.fg,
+  wrapMode: "none",
+  flexGrow: 1,
+});
+
+themeBox.add(themeText);
+
+renderer.root.add(themeBox);
 
 const boxes = {
   sources: sourcesBox,
@@ -214,9 +234,49 @@ const note = (line: string) => {
   logLines = [...logLines, line];
 };
 
+const paintTheme = () => {
+  const name =
+    session.picker === undefined
+      ? session.theme
+      : (themeNames[session.picker.selected] ?? session.theme);
+
+  colors = paletteOf(name);
+
+  renderer.setBackgroundColor(colors.bg);
+  shell.backgroundColor = colors.bg;
+  top.backgroundColor = colors.bg;
+  bottom.backgroundColor = colors.bg;
+  header.backgroundColor = colors.header;
+  header.borderColor = colors.border;
+  headerText.fg = colors.blue;
+  footer.backgroundColor = colors.header;
+  footer.borderColor = colors.border;
+  sourcesBox.backgroundColor = colors.panel;
+  lobbiesBox.backgroundColor = colors.panel;
+  statsBox.backgroundColor = colors.panel;
+  listenersBox.backgroundColor = colors.panel;
+  logBox.backgroundColor = colors.panel;
+  sourcesBox.titleColor = colors.fg;
+  lobbiesBox.titleColor = colors.fg;
+  statsBox.titleColor = colors.fg;
+  listenersBox.titleColor = colors.fg;
+  logBox.titleColor = colors.fg;
+  sourcesText.fg = colors.fg;
+  lobbiesText.fg = colors.fg;
+  statsText.fg = colors.fg;
+  listenersText.fg = colors.fg;
+  logText.fg = colors.fg;
+  themeBox.backgroundColor = colors.panel;
+  themeBox.borderColor = colors.focus;
+  themeBox.titleColor = colors.fg;
+  themeText.fg = colors.fg;
+};
+
 const paint = () => {
+  paintTheme();
+
   for (const pane of ["sources", "lobbies", "listeners"] as const) {
-    boxes[pane].borderColor = session.focus === pane ? theme.focus : theme.border;
+    boxes[pane].borderColor = session.focus === pane ? colors.focus : colors.border;
   }
 
   sourcesBox.title = `Sources ${String(sources.length)}`;
@@ -250,12 +310,28 @@ const paint = () => {
 
   logText.content = formatLog(logLines);
 
-  footerText.content =
-    session.prompt === undefined
-      ? formatHelp(session.focus, undefined)
-      : formatPrompt(session.prompt.kind, session.prompt.buffer);
+  const picking = session.picker?.kind;
 
-  footerText.fg = session.prompt === undefined ? theme.dim : theme.yellow;
+  footerText.content =
+    picking === "theme"
+      ? formatHelp(session.focus, undefined, "theme")
+      : session.prompt === undefined
+        ? formatHelp(session.focus, undefined)
+        : formatPrompt(session.prompt.kind, session.prompt.buffer);
+
+  footerText.fg =
+    session.prompt === undefined && picking === undefined ? colors.dim : colors.yellow;
+
+  themeBox.visible = picking === "theme";
+
+  if (session.picker !== undefined) {
+    const selected = session.picker.selected;
+    const height = 12;
+    const start = Math.max(0, Math.min(selected - 5, themeNames.length - height));
+    const slice = themeNames.slice(start, start + height);
+
+    themeText.content = formatList(slice, selected - start, "");
+  }
 };
 
 const clamp = () => {
@@ -407,6 +483,13 @@ renderer.keyInput.on("keypress", (key) => {
 
   if (action === "quit") {
     halt();
+
+    return;
+  }
+
+  if (action === "theme") {
+    note(`theme ${name}`);
+    paint();
 
     return;
   }

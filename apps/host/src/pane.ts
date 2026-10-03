@@ -1,3 +1,5 @@
+import { defaultTheme, themeNames } from "./theme.ts";
+
 export type LobbyRow = {
   id: string;
   name: string;
@@ -32,6 +34,14 @@ export type FocusPane = "sources" | "lobbies" | "listeners";
 
 export type PromptKind = "create" | "rename";
 
+export type PickerKind = "theme";
+
+export type ThemePicker = {
+  readonly kind: "theme";
+  readonly selected: number;
+  readonly revert: string;
+};
+
 export type Action =
   | "none"
   | "create"
@@ -41,7 +51,8 @@ export type Action =
   | "start"
   | "stop"
   | "copy"
-  | "quit";
+  | "quit"
+  | "theme";
 
 export type KeyStroke = {
   readonly name: string;
@@ -53,7 +64,9 @@ export type Session = {
   readonly selected: number;
   readonly selectedSource: number;
   readonly selectedListener: number;
+  readonly theme: string;
   readonly prompt: { readonly kind: PromptKind; readonly buffer: string } | undefined;
+  readonly picker: ThemePicker | undefined;
 };
 
 export type SessionCounts = {
@@ -69,7 +82,9 @@ export const initialSession = (): Session => ({
   selected: 0,
   selectedSource: 0,
   selectedListener: 0,
+  theme: defaultTheme,
   prompt: undefined,
+  picker: undefined,
 });
 
 export const micRow = (id: string, name: string): SourceRow => {
@@ -144,20 +159,28 @@ export const formatStats = (stats: StatsRow, live: boolean): string => {
   ].join("\n");
 };
 
-export const formatHelp = (focus: FocusPane, prompt: PromptKind | undefined): string => {
+export const formatHelp = (
+  focus: FocusPane,
+  prompt: PromptKind | undefined,
+  picker: PickerKind | undefined = undefined,
+): string => {
+  if (picker === "theme") {
+    return "up/down  enter apply  esc cancel";
+  }
+
   if (prompt !== undefined) {
     return "enter ok  esc cancel";
   }
 
   if (focus === "lobbies") {
-    return "tab panel  n new  r rename  c close  y copy  s start  x stop  q quit";
+    return "tab panel  n new  r rename  c close  y copy  s start  x stop  t theme  q quit";
   }
 
   if (focus === "listeners") {
-    return "tab panel  up/down  k kick  q quit";
+    return "tab panel  up/down  k kick  t theme  q quit";
   }
 
-  return "tab panel  up/down source  s start  x stop  q quit";
+  return "tab panel  up/down source  s start  x stop  t theme  q quit";
 };
 
 export const formatPrompt = (_kind: PromptKind, buffer: string): string => `name: ${buffer}_`;
@@ -189,6 +212,37 @@ export const reduceKey = (
   key: KeyStroke,
   counts: SessionCounts,
 ): [Session, Action, string] => {
+  if (session.picker !== undefined) {
+    if (key.name === "escape") {
+      return [{ ...session, picker: undefined, theme: session.picker.revert }, "none", ""];
+    }
+
+    if (isEnter(key.name)) {
+      const name = themeNames[session.picker.selected] ?? session.theme;
+
+      return [{ ...session, picker: undefined, theme: name }, "theme", name];
+    }
+
+    if (key.name === "up" || key.name === "down") {
+      const delta = key.name === "up" ? -1 : 1;
+
+      return [
+        {
+          ...session,
+          picker: {
+            kind: "theme",
+            selected: nextIndex(session.picker.selected, themeNames.length, delta),
+            revert: session.picker.revert,
+          },
+        },
+        "none",
+        "",
+      ];
+    }
+
+    return [session, "none", ""];
+  }
+
   if (session.prompt !== undefined) {
     if (key.name === "escape") {
       return [{ ...session, prompt: undefined }, "none", ""];
@@ -302,6 +356,22 @@ export const reduceKey = (
 
   if (key.name === "q") {
     return [session, "quit", ""];
+  }
+
+  if (key.name === "t") {
+    const selected = Math.max(
+      0,
+      themeNames.findIndex((id) => id === session.theme),
+    );
+
+    return [
+      {
+        ...session,
+        picker: { kind: "theme", selected, revert: session.theme },
+      },
+      "none",
+      "",
+    ];
   }
 
   return [session, "none", ""];

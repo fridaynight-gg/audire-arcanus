@@ -37,6 +37,7 @@ Proof: two browsers join; roster updates; kick works; CLI can create/list lobbie
 - `1.7` Web join + roster
 - `1.8` Playwright contract: join / roster / kick
 - `1.9` TUI rename, roster, kick, Tokyo Night panels
+- `1.10` TUI theme picker (`t`) matching OpenCode default themes
 
 ## Phase 2 — Mic + Opus + Worklet (macOS first)
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { defaultTheme, paletteOf, themeNames } from "../src/theme.ts";
 import {
   appRow,
   fixtureSine,
@@ -71,6 +72,11 @@ describe("formatHelp", () => {
     expect(formatHelp("lobbies", undefined).includes("r rename")).toBe(true);
     expect(formatHelp("listeners", undefined).includes("k kick")).toBe(true);
     expect(formatHelp("sources", undefined).includes("s start")).toBe(true);
+    expect(formatHelp("lobbies", undefined).includes("t theme")).toBe(true);
+  });
+
+  it("shows theme picker keys", () => {
+    expect(formatHelp("lobbies", undefined, "theme")).toBe("up/down  enter apply  esc cancel");
   });
 });
 
@@ -166,5 +172,97 @@ describe("reduceKey", () => {
     const [closed, action] = reduceKey(open, { name: "escape", sequence: "\u001b" }, counts);
     expect(closed.prompt).toBeUndefined();
     expect(action).toBe("none");
+  });
+
+  it("opens a theme picker on t", () => {
+    const [open, action] = reduceKey(initialSession(), { name: "t", sequence: "t" }, counts);
+    expect(action).toBe("none");
+    expect(open.picker?.kind).toBe("theme");
+    expect(themeNames[open.picker?.selected ?? -1]).toBe(defaultTheme);
+  });
+
+  it("moves the theme picker and applies on enter", () => {
+    let session = reduceKey(initialSession(), { name: "t", sequence: "t" }, counts)[0];
+    session = reduceKey(session, { name: "down", sequence: "" }, counts)[0];
+    expect(session.picker?.selected).toBe(
+      (themeNames.indexOf(defaultTheme) + 1) % themeNames.length,
+    );
+
+    const [done, action, name] = reduceKey(session, { name: "return", sequence: "\r" }, counts);
+    expect(done.picker).toBeUndefined();
+    expect(action).toBe("theme");
+    expect(name).toBe(themeNames[session.picker?.selected ?? 0]);
+    expect(done.theme).toBe(name);
+  });
+
+  it("cancels the theme picker on escape", () => {
+    const open = reduceKey(initialSession(), { name: "t", sequence: "t" }, counts)[0];
+    const moved = reduceKey(open, { name: "down", sequence: "" }, counts)[0];
+    const [closed, action] = reduceKey(moved, { name: "escape", sequence: "\u001b" }, counts);
+    expect(closed.picker).toBeUndefined();
+    expect(closed.theme).toBe(defaultTheme);
+    expect(action).toBe("none");
+  });
+
+  it("types t inside a name prompt instead of opening themes", () => {
+    const open = reduceKey(initialSession(), { name: "n", sequence: "n" }, counts)[0];
+    const [typed, action] = reduceKey(open, { name: "t", sequence: "t" }, counts);
+    expect(action).toBe("none");
+    expect(typed.prompt?.buffer).toBe("t");
+    expect(typed.picker).toBeUndefined();
+  });
+
+  it("does not quit from the theme picker on q", () => {
+    const open = reduceKey(initialSession(), { name: "t", sequence: "t" }, counts)[0];
+    const [, action] = reduceKey(open, { name: "q", sequence: "q" }, counts);
+    expect(action).toBe("none");
+  });
+});
+
+describe("themeNames", () => {
+  it("matches OpenCode default TUI picker ids", () => {
+    expect(themeNames).toEqual([
+      "aura",
+      "ayu",
+      "carbonfox",
+      "catppuccin",
+      "catppuccin-frappe",
+      "catppuccin-macchiato",
+      "cobalt2",
+      "cursor",
+      "dracula",
+      "everforest",
+      "flexoki",
+      "github",
+      "gruvbox",
+      "kanagawa",
+      "lucent-orng",
+      "material",
+      "matrix",
+      "mercury",
+      "monokai",
+      "nightowl",
+      "nord",
+      "one-dark",
+      "opencode",
+      "orng",
+      "osaka-jade",
+      "palenight",
+      "rosepine",
+      "solarized",
+      "synthwave84",
+      "tokyonight",
+      "vercel",
+      "vesper",
+      "zenburn",
+    ]);
+  });
+});
+
+describe("paletteOf", () => {
+  it("uses OpenCode tokyonight dark slots", () => {
+    expect(paletteOf("tokyonight").bg).toBe("#1a1b26");
+    expect(paletteOf("opencode").blue).toBe("#fab283");
+    expect(paletteOf("missing").bg).toBe(paletteOf(defaultTheme).bg);
   });
 });
