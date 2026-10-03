@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `1.6` TUI lobby pane
+**Now:** `1.8` Playwright join/roster/kick
 
 **Goal:** phase 4 (app source + harden)
 
@@ -52,8 +52,8 @@ Update this file on every item. Ritual: one id, then commit.
 
 | id  | item                 | status | proof                                                   |
 | --- | -------------------- | ------ | ------------------------------------------------------- |
-| 0.7 | OpenTUI hello        | wip    | host launches HttpLive + TextRenderable; not TTY-proved |
-| 1.6 | lobby pane           | todo   |                                                         |
+| 0.7 | OpenTUI hello | done | host starts HttpLive + renderer |
+| 1.6 | lobby pane | done | pane tests; n/up/down; poll /api/lobbies |
 | 2.7 | sources + start/stop | todo   |                                                         |
 
 ## Lane F — Web
@@ -88,3 +88,4 @@ Update this file on every item. Ritual: one id, then commit.
 ## Log
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
+- 2026-10-03: TUI lobby pane + format tests. Next Playwright 1.8.
