@@ -48,6 +48,7 @@ export const formatLobbyPane = (
   selected: number,
   sources: ReadonlyArray<SourceRow> = [],
   selectedSource = 0,
+  fault: string | undefined = undefined,
 ): string => {
   const header = "Audire Arcanus  :5551";
   const help = "n create  s start  x stop  left/right source  up/down lobby";
@@ -66,7 +67,10 @@ export const formatLobbyPane = (
           const mark = index === selectedSource ? ">" : " ";
           return `${mark} ${formatSourceLine(source)}`;
         });
-  return [header, "", ...lobbyBlock, "", "Sources", ...sourceBlock, "", help].join("\n");
+  const faultLine = fault === undefined ? [] : ["", fault];
+  return [header, "", ...lobbyBlock, "", "Sources", ...sourceBlock, ...faultLine, "", help].join(
+    "\n",
+  );
 };
 
 export const nextIndex = (selected: number, count: number, delta: number): number => {

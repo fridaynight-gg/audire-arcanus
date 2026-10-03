@@ -36,6 +36,11 @@ describe("formatLobbyPane", () => {
     expect(text.includes("  fixture sine")).toBe(true);
     expect(text.includes("  app Music")).toBe(true);
   });
+
+  it("shows PermissionDenied", () => {
+    const text = formatLobbyPane([], 0, [], 0, "PermissionDenied: TCC");
+    expect(text.includes("PermissionDenied: TCC")).toBe(true);
+  });
 });
 
 describe("streamSourceBody", () => {

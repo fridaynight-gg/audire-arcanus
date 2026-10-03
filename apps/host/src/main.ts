@@ -54,14 +54,25 @@ let selected = 0;
 let selectedSource = 0;
 let lobbies: Array<LobbyRow> = [];
 let sources: Array<SourceRow> = [];
+let fault: string | undefined;
 
 const paint = () => {
-  text.content = formatLobbyPane(lobbies, selected, sources, selectedSource);
+  text.content = formatLobbyPane(lobbies, selected, sources, selectedSource, fault);
+};
+
+const captureStatus = async (): Promise<string | undefined> => {
+  const res = await fetch(`${base}/api/capture/status`);
+  const body = (await res.json()) as { error: { tag: string; message: string } | null };
+  if (body.error === null) {
+    return undefined;
+  }
+  return `${body.error.tag}: ${body.error.message}`;
 };
 
 const refresh = async () => {
   lobbies = await listLobbies();
   sources = await listSources();
+  fault = await captureStatus();
   if (selected >= lobbies.length) {
     selected = Math.max(0, lobbies.length - 1);
   }

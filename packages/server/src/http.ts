@@ -131,6 +131,16 @@ const ListSources = HttpRouter.add(
   ),
 );
 
+const CaptureStatus = HttpRouter.add(
+  "GET",
+  "/api/capture/status",
+  Effect.gen(function* () {
+    const streamer = yield* Streamer;
+    const fault = yield* streamer.lastFault;
+    return jsonOk({ error: fault ?? null });
+  }),
+);
+
 const StartStream = HttpRouter.add(
   "POST",
   "/api/stream/start",
@@ -167,6 +177,7 @@ const Routes = Layer.mergeAll(
   Kick,
   Join,
   ListSources,
+  CaptureStatus,
   StartStream,
   StopStream,
   WsRoute,

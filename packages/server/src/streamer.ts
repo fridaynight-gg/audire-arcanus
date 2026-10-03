@@ -1,11 +1,16 @@
 import { Context, Effect, Layer } from "effect";
-import { CaptureUnavailable, type LobbyId, LobbyNotFound } from "@audire/domain";
+import { CaptureUnavailable, type LobbyId, LobbyNotFound, PermissionDenied } from "@audire/domain";
 import { encodeFrame, encodeMediaPayload, FrameType, type StreamSource } from "@audire/protocol";
 import { startCapture, createOpusEncoder } from "@audire/audio";
 import { LobbyRepo } from "./lobby-repo.ts";
 import { WsHub } from "./ws-hub.ts";
 
 const encoder = new TextEncoder();
+
+export type CaptureFault = {
+  readonly tag: string;
+  readonly message: string;
+};
 
 const captureArgs = (source: StreamSource | undefined): Array<string> => {
   if (source?._tag === "mic") {
@@ -17,6 +22,16 @@ const captureArgs = (source: StreamSource | undefined): Array<string> => {
   return ["--fixture", "sine"];
 };
 
+const faultFrom = (cause: unknown): CaptureFault => {
+  if (cause instanceof PermissionDenied) {
+    return { tag: "PermissionDenied", message: cause.source };
+  }
+  if (cause instanceof CaptureUnavailable) {
+    return { tag: "CaptureUnavailable", message: cause.reason };
+  }
+  return { tag: "CaptureUnavailable", message: String(cause) };
+};
+
 export class Streamer extends Context.Service<
   Streamer,
   {
@@ -25,6 +40,7 @@ export class Streamer extends Context.Service<
       source: StreamSource | undefined,
     ) => Effect.Effect<void, LobbyNotFound | CaptureUnavailable>;
     readonly stop: (lobbyId: LobbyId) => Effect.Effect<void>;
+    readonly lastFault: Effect.Effect<CaptureFault | undefined>;
   }
 >()("@audire/Streamer") {
   static readonly layer = Layer.effect(
@@ -33,8 +49,10 @@ export class Streamer extends Context.Service<
       const hub = yield* WsHub;
       const repo = yield* LobbyRepo;
       const running = new Map<LobbyId, AbortController>();
+      let lastFault: CaptureFault | undefined;
 
       return {
+        lastFault: Effect.sync(() => lastFault),
         start: (lobbyId: LobbyId, source: StreamSource | undefined) =>
           Effect.gen(function* () {
             yield* repo.get(lobbyId);
@@ -44,6 +62,7 @@ export class Streamer extends Context.Service<
             }
             const ac = new AbortController();
             running.set(lobbyId, ac);
+            lastFault = undefined;
             yield* repo.setStreaming(lobbyId, true);
             yield* Effect.forkDetach(
               Effect.tryPromise({
@@ -79,8 +98,18 @@ export class Streamer extends Context.Service<
                     opus.free();
                   }
                 },
-                catch: (cause) => new CaptureUnavailable({ reason: String(cause) }),
-              }).pipe(Effect.ignore),
+                catch: (cause) => {
+                  const fault = faultFrom(cause);
+                  lastFault = fault;
+                  running.delete(lobbyId);
+                  return fault.tag === "PermissionDenied"
+                    ? new PermissionDenied({ source: fault.message })
+                    : new CaptureUnavailable({ reason: fault.message });
+                },
+              }).pipe(
+                Effect.tapError(() => repo.setStreaming(lobbyId, false).pipe(Effect.ignore)),
+                Effect.ignore,
+              ),
             );
           }),
         stop: (lobbyId: LobbyId) =>

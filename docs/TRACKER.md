@@ -2,11 +2,11 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `3.3` PermissionDenied
+**Now:** `4.1` Broadcaster drop
 
 **Goal:** phase 4 (app source + harden)
 
-**Phase:** 3 (app sources)
+**Phase:** 4 (harden)
 
 ## Lane A — Docs / contract
 
@@ -73,7 +73,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 2.4  | macOS mic                      | done                 | --list mics; --mic framed 3840; GET /api/sources |
 | 3.1  | list apps                      | done                 | NSWorkspace; Music/Spotify in --list |
 | 3.2  | capture app                    | done                 | --app PID SCK; TCC decline → PermissionDenied JSON |
-| 3.3  | PermissionDenied               | todo                 |                        |
+| 3.3  | PermissionDenied               | done                 | GET /api/capture/status tag; TUI fault line |
 | 3.4  | Swift fallback                 | skipped until needed |                        |
 | 3.5  | Windows                        | todo                 |                        |
 | 3.6  | Linux                          | todo                 |                        |
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: --app PID via objc2 ScreenCaptureKit. TCC decline tagged PermissionDenied.
+- 2026-10-03: PermissionDenied in /api/capture/status and TUI.
