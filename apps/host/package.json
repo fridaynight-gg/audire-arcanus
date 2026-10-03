@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@audire/domain": "workspace:*",
-    "@audire/server": "workspace:*"
+    "@audire/server": "workspace:*",
+    "@effect/platform-bun": "4.0.0",
+    "@opentui/core": "0.5.14",
+    "effect": "4.0.0"
   }
 }

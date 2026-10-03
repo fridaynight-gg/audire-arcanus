@@ -5,6 +5,7 @@
     "declaration": true,
     "declarationMap": true,
     "noEmit": false,
+    "lib": ["ES2025", "DOM"],
     "outDir": "dist",
     "rootDir": "src"
   },

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@audire/domain": "workspace:*",
-    "@audire/protocol": "workspace:*"
+    "@audire/protocol": "workspace:*",
+    "effect": "4.0.0"
   }
 }

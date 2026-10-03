@@ -12,6 +12,8 @@
   "dependencies": {
     "@audire/domain": "workspace:*",
     "@audire/protocol": "workspace:*",
-    "@audire/server": "workspace:*"
+    "@audire/server": "workspace:*",
+    "@effect/platform-bun": "4.0.0",
+    "effect": "4.0.0"
   }
 }
