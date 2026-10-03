@@ -6,7 +6,9 @@
     "declarationMap": true,
     "noEmit": false,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "lib": ["ES2025", "DOM"],
+    "types": ["bun"]
   },
   "include": ["src"],
   "references": [{ "path": "../domain" }, { "path": "../protocol" }]

@@ -21,3 +21,7 @@ export class JoinLobby extends Schema.Class<JoinLobby>("JoinLobby")({
 export class IdParam extends Schema.Class<IdParam>("IdParam")({
   id: LobbyId,
 }) {}
+
+export class StreamLobby extends Schema.Class<StreamLobby>("StreamLobby")({
+  lobbyId: LobbyId,
+}) {}

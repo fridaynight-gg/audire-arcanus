@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.1` WS audio frames
+**Now:** `2.2` Opus encode
 
 **Goal:** phase 4 (app source + harden)
 
@@ -33,7 +33,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 1.2 | LobbyRepo                 | done   | vitest 3 passed; Layer.effect + Map |
 | 1.3 | HTTP lobby API            | done   | POST/GET/PATCH/join/kick; 404 miss  |
 | 1.4 | WS control frames | done | WS join → `_tag: joined`; hang handler (no 204) |
-| 2.1 | WS audio frames           | todo   |                                     |
+| 2.1 | WS audio frames | done | 0x01 pcm-s16le then 0x02 x3 then 0x03 |
 | 2.2 | Opus encode               | todo   |                                     |
 | 4.1 | Broadcaster drop          | todo   |                                     |
 | 4.2 | Stats                     | todo   |                                     |
@@ -89,3 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
+- 2026-10-03: WS audio frames from fixture sine (pcm-s16le). Next Opus.

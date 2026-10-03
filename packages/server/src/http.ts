@@ -1,10 +1,18 @@
 import { Effect, Layer } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 import { BunHttpServer } from "@effect/platform-bun";
-import { CreateLobby, IdParam, JoinLobby, KickListener, RenameLobby } from "@audire/protocol";
+import {
+  CreateLobby,
+  IdParam,
+  JoinLobby,
+  KickListener,
+  RenameLobby,
+  StreamLobby,
+} from "@audire/protocol";
 import { LobbyRepo } from "./lobby-repo.ts";
 import { WsHub } from "./ws-hub.ts";
 import { WsRoute } from "./ws.ts";
+import { Streamer } from "./streamer.ts";
 
 const jsonOk = (body: unknown) => HttpServerResponse.jsonUnsafe(body);
 
@@ -107,6 +115,31 @@ const Kick = HttpRouter.add(
   ),
 );
 
+const StartStream = HttpRouter.add(
+  "POST",
+  "/api/stream/start",
+  Effect.gen(function* () {
+    const streamer = yield* Streamer;
+    const body = yield* HttpServerRequest.schemaBodyJson(StreamLobby);
+    yield* streamer.start(body.lobbyId);
+    return jsonOk({ ok: true });
+  }).pipe(
+    Effect.catchTag("LobbyNotFound", () => Effect.succeed(jsonErr("LobbyNotFound", 404))),
+    Effect.catchTag("CaptureUnavailable", () => Effect.succeed(jsonErr("CaptureUnavailable", 500))),
+  ),
+);
+
+const StopStream = HttpRouter.add(
+  "POST",
+  "/api/stream/stop",
+  Effect.gen(function* () {
+    const streamer = yield* Streamer;
+    const body = yield* HttpServerRequest.schemaBodyJson(StreamLobby);
+    yield* streamer.stop(body.lobbyId);
+    return jsonOk({ ok: true });
+  }),
+);
+
 const Routes = Layer.mergeAll(
   Health,
   ListLobbies,
@@ -117,11 +150,14 @@ const Routes = Layer.mergeAll(
   ListListeners,
   Kick,
   Join,
+  StartStream,
+  StopStream,
   WsRoute,
 );
 
 export const HttpLive = HttpRouter.serve(Routes).pipe(
-  Layer.provide(LobbyRepo.layer),
-  Layer.provide(WsHub.layer),
+  Layer.provide(
+    Streamer.layer.pipe(Layer.provideMerge(WsHub.layer), Layer.provideMerge(LobbyRepo.layer)),
+  ),
   Layer.provide(BunHttpServer.layer({ hostname: "0.0.0.0", port: 5551 })),
 );
