@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import { Schema } from "effect";
 
 export class MicSource extends Schema.TaggedClass<MicSource>("MicSource")("mic", {
   id: Schema.String,
@@ -15,5 +15,5 @@ export class FixtureSource extends Schema.TaggedClass<FixtureSource>("FixtureSou
   name: Schema.Literals(["sine"]),
 }) {}
 
-export const AudioSource = Schema.Union([MicSource, AppSource, FixtureSource])
-export type AudioSource = typeof AudioSource.Type
+export const AudioSource = Schema.Union([MicSource, AppSource, FixtureSource]);
+export type AudioSource = typeof AudioSource.Type;

@@ -1,5 +1,5 @@
-import { Schema } from "effect"
-import { JoinCode, LobbyId, ListenerId, Username } from "./ids.ts"
+import { Schema } from "effect";
+import { JoinCode, LobbyId, ListenerId, Username } from "./ids.ts";
 
 export class Lobby extends Schema.Class<Lobby>("Lobby")({
   id: LobbyId,

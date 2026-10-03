@@ -1,5 +1,5 @@
-import { Schema } from "effect"
-import { JoinCode, ListenerId, LobbyId } from "./ids.ts"
+import { Schema } from "effect";
+import { JoinCode, ListenerId, LobbyId } from "./ids.ts";
 
 export class LobbyNotFound extends Schema.TaggedError<LobbyNotFound>()("LobbyNotFound", {
   lobbyId: Schema.optional(LobbyId),
@@ -14,15 +14,21 @@ export class AlreadyJoined extends Schema.TaggedError<AlreadyJoined>()("AlreadyJ
   listenerId: ListenerId,
 }) {}
 
-export class CaptureUnavailable extends Schema.TaggedError<CaptureUnavailable>()("CaptureUnavailable", {
-  reason: Schema.String,
-}) {}
+export class CaptureUnavailable extends Schema.TaggedError<CaptureUnavailable>()(
+  "CaptureUnavailable",
+  {
+    reason: Schema.String,
+  },
+) {}
 
 export class PermissionDenied extends Schema.TaggedError<PermissionDenied>()("PermissionDenied", {
   source: Schema.String,
 }) {}
 
-export class UnsupportedPlatform extends Schema.TaggedError<UnsupportedPlatform>()("UnsupportedPlatform", {
-  platform: Schema.String,
-  feature: Schema.String,
-}) {}
+export class UnsupportedPlatform extends Schema.TaggedError<UnsupportedPlatform>()(
+  "UnsupportedPlatform",
+  {
+    platform: Schema.String,
+    feature: Schema.String,
+  },
+) {}
