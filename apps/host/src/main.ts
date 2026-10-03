@@ -59,19 +59,33 @@ const httpFiber = Effect.runFork(
   ),
 );
 
-const halt = () => {
-  Effect.runFork(Fiber.interrupt(httpFiber));
-};
-
-process.on("SIGINT", halt);
-
-process.on("SIGTERM", halt);
+let shutdownStarted = false;
 
 const renderer = await createCliRenderer({
   exitOnCtrlC: true,
   backgroundColor: theme.bg,
   useMouse: true,
 });
+
+const halt = () => {
+  if (shutdownStarted) {
+    return;
+  }
+
+  shutdownStarted = true;
+
+  void fetch(`${base}/api/shutdown`, { method: "POST" })
+    .catch(() => undefined)
+    .finally(() => {
+      Effect.runFork(Fiber.interrupt(httpFiber));
+      renderer.destroy();
+      process.exit(0);
+    });
+};
+
+process.on("SIGINT", halt);
+
+process.on("SIGTERM", halt);
 
 renderer.root.flexDirection = "column";
 
@@ -387,6 +401,12 @@ renderer.keyInput.on("keypress", (key) => {
 
   if (action === "none") {
     paint();
+
+    return;
+  }
+
+  if (action === "quit") {
+    halt();
 
     return;
   }

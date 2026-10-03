@@ -88,7 +88,7 @@ Update this file on every item. Ritual: one id, then commit.
 
 ## Log
 
-- 2026-10-04: TUI Tokyo Night panels; n/r name, roster, k kick, y copy, c close.
+- 2026-10-04: q quits the host (shutdown + TUI destroy). TUI Tokyo Night panels; n/r name, roster, k kick, y copy, c close.
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
 - 2026-10-03: serve --loopback binds 127.0.0.1:5551.

@@ -32,7 +32,16 @@ export type FocusPane = "sources" | "lobbies" | "listeners";
 
 export type PromptKind = "create" | "rename";
 
-export type Action = "none" | "create" | "rename" | "close" | "kick" | "start" | "stop" | "copy";
+export type Action =
+  | "none"
+  | "create"
+  | "rename"
+  | "close"
+  | "kick"
+  | "start"
+  | "stop"
+  | "copy"
+  | "quit";
 
 export type KeyStroke = {
   readonly name: string;
@@ -141,14 +150,14 @@ export const formatHelp = (focus: FocusPane, prompt: PromptKind | undefined): st
   }
 
   if (focus === "lobbies") {
-    return "tab panel  n new  r rename  c close  y copy  s start  x stop";
+    return "tab panel  n new  r rename  c close  y copy  s start  x stop  q quit";
   }
 
   if (focus === "listeners") {
-    return "tab panel  up/down  k kick";
+    return "tab panel  up/down  k kick  q quit";
   }
 
-  return "tab panel  up/down source  s start  x stop";
+  return "tab panel  up/down source  s start  x stop  q quit";
 };
 
 export const formatPrompt = (_kind: PromptKind, buffer: string): string => `name: ${buffer}_`;
@@ -289,6 +298,10 @@ export const reduceKey = (
 
   if (key.name === "k") {
     return [session, "kick", ""];
+  }
+
+  if (key.name === "q") {
+    return [session, "quit", ""];
   }
 
   return [session, "none", ""];

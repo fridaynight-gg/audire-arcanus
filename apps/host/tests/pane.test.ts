@@ -143,14 +143,22 @@ describe("reduceKey", () => {
     expect(name).toBe("x");
   });
 
-  it("emits kick close start stop copy", () => {
+  it("emits kick close start stop copy quit", () => {
     expect(reduceKey(initialSession(), { name: "s", sequence: "s" }, counts)[1]).toBe("start");
     expect(reduceKey(initialSession(), { name: "x", sequence: "x" }, counts)[1]).toBe("stop");
     expect(reduceKey(initialSession(), { name: "c", sequence: "c" }, counts)[1]).toBe("close");
     expect(reduceKey(initialSession(), { name: "y", sequence: "y" }, counts)[1]).toBe("copy");
+    expect(reduceKey(initialSession(), { name: "q", sequence: "q" }, counts)[1]).toBe("quit");
 
     const listening = { ...initialSession(), focus: "listeners" as const };
     expect(reduceKey(listening, { name: "k", sequence: "k" }, counts)[1]).toBe("kick");
+  });
+
+  it("types q inside a name prompt instead of quitting", () => {
+    const open = reduceKey(initialSession(), { name: "n", sequence: "n" }, counts)[0];
+    const [typed, action] = reduceKey(open, { name: "q", sequence: "q" }, counts);
+    expect(action).toBe("none");
+    expect(typed.prompt?.buffer).toBe("q");
   });
 
   it("cancels the prompt on escape", () => {
