@@ -1,11 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
-import { formatLobbyPane, nextIndex } from "../src/pane.ts";
+import { formatLobbyPane, nextIndex, streamSourceBody } from "../src/pane.ts";
 
 describe("formatLobbyPane", () => {
   it("shows empty state", () => {
     const text = formatLobbyPane([], 0);
     expect(text.includes("No lobbies.")).toBe(true);
-    expect(text.includes("n create")).toBe(true);
+    expect(text.includes("No sources.")).toBe(true);
+    expect(text.includes("s start")).toBe(true);
   });
 
   it("marks the selected lobby", () => {
@@ -18,6 +19,33 @@ describe("formatLobbyPane", () => {
     );
     expect(text.includes("> two  GHJKMN  2  live")).toBe(true);
     expect(text.includes("  one  ABCDEF  0  idle")).toBe(true);
+  });
+
+  it("marks the selected source", () => {
+    const text = formatLobbyPane(
+      [{ id: "a", name: "one", joinCode: "ABCDEF", listenerCount: 0, isStreaming: false }],
+      0,
+      [
+        { _tag: "fixture", name: "sine" },
+        { _tag: "mic", id: "0", name: "Built-in" },
+      ],
+      1,
+    );
+    expect(text.includes("> mic Built-in")).toBe(true);
+    expect(text.includes("  fixture sine")).toBe(true);
+  });
+});
+
+describe("streamSourceBody", () => {
+  it("maps mic and fixture", () => {
+    expect(streamSourceBody({ _tag: "mic", id: "1", name: "Wave" })).toEqual({
+      _tag: "mic",
+      id: "1",
+    });
+    expect(streamSourceBody({ _tag: "fixture", name: "sine" })).toEqual({
+      _tag: "fixture",
+      name: "sine",
+    });
   });
 });
 

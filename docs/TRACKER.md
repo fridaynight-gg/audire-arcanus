@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.7` TUI sources + start/stop
+**Now:** `3.1` list apps
 
 **Goal:** phase 4 (app source + harden)
 
@@ -54,7 +54,7 @@ Update this file on every item. Ritual: one id, then commit.
 | --- | -------------------- | ------ | ------------------------------------------------------- |
 | 0.7 | OpenTUI hello | done | host starts HttpLive + renderer |
 | 1.6 | lobby pane | done | pane tests; n/up/down; poll /api/lobbies |
-| 2.7 | sources + start/stop | todo   |                                                         |
+| 2.7 | sources + start/stop | done   | s/x/left/right; pane tests |
 
 ## Lane F — Web
 
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: CLI stream start/stop fixture and mic.
+- 2026-10-03: TUI sources + s start / x stop.
