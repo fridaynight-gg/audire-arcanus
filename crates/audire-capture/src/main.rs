@@ -45,22 +45,70 @@ fn main() {
     }
 }
 
+fn json_escape(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
 fn list_sources() {
     let mut out = String::from("[{\"_tag\":\"fixture\",\"name\":\"sine\"}");
     if let Ok(host) = std::panic::catch_unwind(cpal::default_host) {
         if let Ok(devices) = host.input_devices() {
             for (i, device) in devices.enumerate() {
                 let name = device.name().unwrap_or_else(|_| "mic".into());
-                let escaped = name.replace('\\', "\\\\").replace('"', "\\\"");
+                let escaped = json_escape(&name);
                 out.push_str(&format!(
                     ",{{\"_tag\":\"mic\",\"id\":\"{i}\",\"name\":\"{escaped}\"}}"
                 ));
             }
         }
     }
+    append_apps(&mut out);
     out.push(']');
     println!("{out}");
 }
+
+#[cfg(target_os = "macos")]
+fn append_apps(out: &mut String) {
+    use objc2_app_kit::{NSApplicationActivationPolicy, NSWorkspace};
+
+    let workspace = NSWorkspace::sharedWorkspace();
+    let apps = workspace.runningApplications();
+    let self_pid = std::process::id() as i32;
+    for app in apps.iter() {
+        if app.processIdentifier() == self_pid {
+            continue;
+        }
+        if app.activationPolicy() != NSApplicationActivationPolicy::Regular {
+            continue;
+        }
+        let name = app
+            .localizedName()
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "app".into());
+        if name.is_empty() {
+            continue;
+        }
+        let pid = app.processIdentifier();
+        let bundle = app
+            .bundleIdentifier()
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+        let escaped = json_escape(&name);
+        let bundle_esc = json_escape(&bundle);
+        if bundle.is_empty() {
+            out.push_str(&format!(
+                r#",{{"_tag":"app","pid":{pid},"name":"{escaped}"}}"#
+            ));
+        } else {
+            out.push_str(&format!(
+                r#",{{"_tag":"app","pid":{pid},"name":"{escaped}","bundleId":"{bundle_esc}"}}"#
+            ));
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn append_apps(_out: &mut String) {}
 
 fn emit_sine() {
     let sample_rate = 48_000u32;

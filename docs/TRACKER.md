@@ -2,11 +2,11 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `3.1` list apps
+**Now:** `3.2` capture app
 
 **Goal:** phase 4 (app source + harden)
 
-**Phase:** 2 (lobbies proven; audio next)
+**Phase:** 3 (app sources)
 
 ## Lane A — Docs / contract
 
@@ -71,7 +71,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 0.10 | Rust crate help + fixture sine | done                 | cargo release + --help |
 | 2.3  | Effect supervisor              | done                 | spawn fixture sine; abort on stop |
 | 2.4  | macOS mic                      | done                 | --list mics; --mic framed 3840; GET /api/sources |
-| 3.1  | list apps                      | todo                 |                        |
+| 3.1  | list apps                      | done                 | NSWorkspace; Music/Spotify in --list |
 | 3.2  | capture app                    | todo                 |                        |
 | 3.3  | PermissionDenied               | todo                 |                        |
 | 3.4  | Swift fallback                 | skipped until needed |                        |
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: TUI sources + s start / x stop.
+- 2026-10-03: list running apps via NSWorkspace. Music/Spotify present.

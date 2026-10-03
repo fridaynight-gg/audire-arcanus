@@ -28,11 +28,13 @@ describe("formatLobbyPane", () => {
       [
         { _tag: "fixture", name: "sine" },
         { _tag: "mic", id: "0", name: "Built-in" },
+        { _tag: "app", pid: 12, name: "Music" },
       ],
       1,
     );
     expect(text.includes("> mic Built-in")).toBe(true);
     expect(text.includes("  fixture sine")).toBe(true);
+    expect(text.includes("  app Music")).toBe(true);
   });
 });
 

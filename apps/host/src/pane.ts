@@ -8,17 +8,30 @@ export type LobbyRow = {
 
 export type SourceRow =
   | { readonly _tag: "fixture"; readonly name: "sine" }
-  | { readonly _tag: "mic"; readonly id: string; readonly name: string };
+  | { readonly _tag: "mic"; readonly id: string; readonly name: string }
+  | {
+      readonly _tag: "app";
+      readonly pid: number;
+      readonly name: string;
+      readonly bundleId?: string;
+    };
 
 export const formatSourceLine = (source: SourceRow): string => {
   if (source._tag === "mic") {
     return `mic ${source.name}`;
   }
+  if (source._tag === "app") {
+    return `app ${source.name}`;
+  }
   return "fixture sine";
 };
 
-export const streamSourceBody = (
+export const canStream = (
   source: SourceRow,
+): source is Exclude<SourceRow, { readonly _tag: "app" }> => source._tag !== "app";
+
+export const streamSourceBody = (
+  source: Exclude<SourceRow, { readonly _tag: "app" }>,
 ):
   | { readonly _tag: "mic"; readonly id: string }
   | { readonly _tag: "fixture"; readonly name: "sine" } => {

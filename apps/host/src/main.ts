@@ -5,6 +5,7 @@ import {
   formatLobbyPane,
   nextIndex,
   streamSourceBody,
+  canStream,
   type LobbyRow,
   type SourceRow,
 } from "./pane.ts";
@@ -98,7 +99,7 @@ renderer.keyInput.on("keypress", (key) => {
   if (key.name === "s") {
     const lobby = lobbies[selected];
     const source = sources[selectedSource];
-    if (lobby === undefined || source === undefined) {
+    if (lobby === undefined || source === undefined || !canStream(source)) {
       return;
     }
     void postStream("/api/stream/start", {
