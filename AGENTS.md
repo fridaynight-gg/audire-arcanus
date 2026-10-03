@@ -1,26 +1,15 @@
-# Audire Arcanus - Agent Guidelines
+# Agent contract
 
-## Project Overview
+TUI host captures mic or per-app audio and streams it to browser lobbies with join codes. LAN. Port 5551.
 
-NestJS Electron app for high-fidelity audio streaming from PC application sources to browser-based lobby listeners with TUI-like interface.
+Stack: Bun; Effect 4 + @effect/platform-bun; @opentui/core; Vite + React; Rust capture child (Swift fallback).
 
-## Commands
+Before any work: docs/LOCK.md, docs/RITUAL.md, docs/TRACKER.md. One tracker item. Update the tracker. Commit.
 
-- **Build**: `npm run build`
-- **Lint**: `npm run lint` (auto-fixes)
-- **Format**: `npm run format`
-- **Test (single)**: `npm test -- <test-file-name>` or `npm test -- -t "<test-name>"`
-- **Test (all)**: `npm test`
-- **Test (e2e)**: `npm run test:e2e`
-- **Dev**: `npm run start:dev`
+After scaffold: `bun run check` | `bun run dev` | `bun run test` | `bun run test:e2e`
 
-## Code Style
+TS 7 strict. Oxlint + Oxfmt + vendored anti-slop (generic + Effect). Schema at HTTP/WS boundaries. Tagged errors. Match / catchTag. No unknown in public APIs. Use `effect-solutions` cli for understanding effect ts best practices. Use before making effect decisions.
 
-- **Imports**: NestJS decorators first, then third-party, then local imports
-- **Formatting**: Prettier enforced - single quotes, trailing commas
-- **Types**: TypeScript with `strictNullChecks` enabled; explicit types preferred, `any` allowed sparingly
-- **Naming**: camelCase for variables/methods, PascalCase for classes, kebab-case for file names
-- **Decorators**: Use NestJS decorators (`@Injectable()`, `@Controller()`, `@Get()`, etc.)
-- **DI**: Constructor-based dependency injection with `private readonly` parameters
-- **Error Handling**: Use NestJS built-in HTTP exceptions and filters
-- **ESLint**: Follows `typescript-eslint` recommended type-checked config; floating promises warn, no-explicit-any off
+Lint, format, test, typecheck and commit and push often.
+
+Capture: Effect supervises the Rust helper; PCM on the pipe; Opus in TS. Tests use `fixture:sine`.

@@ -1,6 +1,6 @@
 # Implementation plan
 
-Greenfield on `rewrite/effect-opentui`. `main` stays the Nest/Electron archive.
+Greenfield on `rewrite/effect-opentui`. `main` stays the Nest/Electron archive. Goal is phase 4 (app sources + harden), not scaffold-only.
 
 Phase N is closed only when its proof holds. Tracker ids in parentheses.
 
@@ -10,9 +10,9 @@ Workspace, tooling, empty packages, Bun Effect HTTP “ok” on 5551, OpenTUI he
 
 Proof: `bun run check` green on empty packages; `bun run dev` shows TUI text and serves `/health`.
 
-- `0.1` Planning docs (this folder) — current
-- `0.2` Replace root AGENTS.md with docs/AGENTS.md (needs write approval)
-- `0.3` Bun workspace + TS 7 + engines
+- `0.1` Planning docs (this folder)
+- `0.2` Root AGENTS.md = AGENT-CONTRACT.md
+- `0.3` Bun workspace + TS 7 + Vite 8 + React 19 + engines (extends `tsconfig.base.json`)
 - `0.4` Oxlint, Oxfmt, vendor anti-slop + Effect rules, `@effect/tsgo`
 - `0.5` Package skeletons matching LOCK repo shape
 - `0.6` Effect HTTP `/health` on 5551 (platform-bun)
