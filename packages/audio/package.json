@@ -9,6 +9,7 @@
   "dependencies": {
     "@audire/domain": "workspace:*",
     "@audire/protocol": "workspace:*",
-    "effect": "4.0.0"
+    "effect": "4.0.0",
+    "libopus-wasm": "0.4.1"
   }
 }

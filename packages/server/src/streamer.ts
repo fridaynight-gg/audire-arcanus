@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 import { CaptureUnavailable, type LobbyId, LobbyNotFound } from "@audire/domain";
 import { encodeFrame, encodeMediaPayload, FrameType } from "@audire/protocol";
-import { startFixtureSine } from "@audire/audio";
+import { startFixtureSine, createOpusEncoder } from "@audire/audio";
 import { LobbyRepo } from "./lobby-repo.ts";
 import { WsHub } from "./ws-hub.ts";
 
@@ -34,30 +34,37 @@ export class Streamer extends Context.Service<
             yield* repo.setStreaming(lobbyId, true);
             yield* Effect.forkDetach(
               Effect.tryPromise({
-                try: () => {
+                try: async () => {
+                  const opus = await createOpusEncoder();
                   let seq = 0;
                   let started = false;
-                  return startFixtureSine(ac.signal, async (pcm) => {
-                    if (!started) {
-                      started = true;
-                      const body = encoder.encode(
-                        JSON.stringify({
-                          codec: "pcm-s16le",
-                          sampleRate: 48000,
-                          channels: 2,
-                          frameDurationMs: 20,
-                        }),
-                      );
+                  try {
+                    await startFixtureSine(ac.signal, async (pcm) => {
+                      if (!started) {
+                        started = true;
+                        const body = encoder.encode(
+                          JSON.stringify({
+                            codec: "opus",
+                            sampleRate: 48000,
+                            channels: 2,
+                            frameDurationMs: 20,
+                            bitrate: 160000,
+                          }),
+                        );
+                        await Effect.runPromise(
+                          hub.broadcast(lobbyId, encodeFrame(FrameType.streamStart, body)),
+                        );
+                      }
+                      const packet = opus.encode(pcm);
+                      const media = encodeMediaPayload(seq, seq * 20, packet);
+                      seq += 1;
                       await Effect.runPromise(
-                        hub.broadcast(lobbyId, encodeFrame(FrameType.streamStart, body)),
+                        hub.broadcast(lobbyId, encodeFrame(FrameType.opus, media)),
                       );
-                    }
-                    const media = encodeMediaPayload(seq, seq * 20, pcm);
-                    seq += 1;
-                    await Effect.runPromise(
-                      hub.broadcast(lobbyId, encodeFrame(FrameType.opus, media)),
-                    );
-                  });
+                    });
+                  } finally {
+                    opus.free();
+                  }
                 },
                 catch: (cause) => new CaptureUnavailable({ reason: String(cause) }),
               }).pipe(Effect.ignore),

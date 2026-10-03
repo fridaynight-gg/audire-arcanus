@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.2` Opus encode
+**Now:** `2.5` Worklet + wasm Opus decode
 
 **Goal:** phase 4 (app source + harden)
 
@@ -34,7 +34,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 1.3 | HTTP lobby API            | done   | POST/GET/PATCH/join/kick; 404 miss  |
 | 1.4 | WS control frames | done | WS join → `_tag: joined`; hang handler (no 204) |
 | 2.1 | WS audio frames | done | 0x01 pcm-s16le then 0x02 x3 then 0x03 |
-| 2.2 | Opus encode               | todo   |                                     |
+| 2.2 | Opus encode | done | libopus-wasm; packets ~430–636B vs 3840 PCM |
 | 4.1 | Broadcaster drop          | todo   |                                     |
 | 4.2 | Stats                     | todo   |                                     |
 | 4.3 | Shutdown                  | todo   |                                     |
@@ -69,7 +69,7 @@ Update this file on every item. Ritual: one id, then commit.
 | id   | item                           | status               | proof                  |
 | ---- | ------------------------------ | -------------------- | ---------------------- |
 | 0.10 | Rust crate help + fixture sine | done                 | cargo release + --help |
-| 2.3  | Effect supervisor              | todo                 |                        |
+| 2.3  | Effect supervisor              | done                 | spawn fixture sine; abort on stop |
 | 2.4  | macOS mic                      | todo                 |                        |
 | 3.1  | list apps                      | todo                 |                        |
 | 3.2  | capture app                    | todo                 |                        |
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: WS audio frames from fixture sine (pcm-s16le). Next Opus.
+- 2026-10-03: Opus encode via libopus-wasm. Packets ~430–636B. Next Worklet.
