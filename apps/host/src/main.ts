@@ -1,4 +1,4 @@
-import { Effect, Layer } from "effect";
+import { Effect, Fiber, Layer } from "effect";
 import { HttpLive } from "@audire/server";
 import { BoxRenderable, TextRenderable, createCliRenderer } from "@opentui/core";
 import {
@@ -38,7 +38,12 @@ const postStream = async (path: string, body: unknown): Promise<void> => {
   });
 };
 
-Effect.runFork(Layer.launch(HttpLive));
+const httpFiber = Effect.runFork(Layer.launch(HttpLive));
+const halt = () => {
+  Effect.runFork(Fiber.interrupt(httpFiber));
+};
+process.on("SIGINT", halt);
+process.on("SIGTERM", halt);
 
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
 const box = new BoxRenderable(renderer, {

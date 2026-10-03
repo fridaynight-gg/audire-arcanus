@@ -176,6 +176,16 @@ const StopStream = HttpRouter.add(
   }),
 );
 
+const Shutdown = HttpRouter.add(
+  "POST",
+  "/api/shutdown",
+  Effect.gen(function* () {
+    const streamer = yield* Streamer;
+    yield* streamer.stopAll;
+    return jsonOk({ ok: true });
+  }),
+);
+
 const Routes = Layer.mergeAll(
   Health,
   ListLobbies,
@@ -191,6 +201,7 @@ const Routes = Layer.mergeAll(
   Stats,
   StartStream,
   StopStream,
+  Shutdown,
   WsRoute,
 );
 

@@ -41,6 +41,7 @@ export class Streamer extends Context.Service<
     ) => Effect.Effect<void, LobbyNotFound | CaptureUnavailable>;
     readonly stop: (lobbyId: LobbyId) => Effect.Effect<void>;
     readonly lastFault: Effect.Effect<CaptureFault | undefined>;
+    readonly stopAll: Effect.Effect<void>;
   }
 >()("@audire/Streamer") {
   static readonly layer = Layer.effect(
@@ -51,8 +52,18 @@ export class Streamer extends Context.Service<
       const running = new Map<LobbyId, AbortController>();
       let lastFault: CaptureFault | undefined;
 
+      const stopAll = Effect.sync(() => {
+        for (const ac of running.values()) {
+          ac.abort();
+        }
+        running.clear();
+      });
+
+      yield* Effect.addFinalizer(() => stopAll);
+
       return {
         lastFault: Effect.sync(() => lastFault),
+        stopAll,
         start: (lobbyId: LobbyId, source: StreamSource | undefined) =>
           Effect.gen(function* () {
             yield* repo.get(lobbyId);
