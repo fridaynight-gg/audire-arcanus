@@ -205,9 +205,12 @@ const Routes = Layer.mergeAll(
   WsRoute,
 );
 
-export const HttpLive = HttpRouter.serve(Routes).pipe(
-  Layer.provide(
-    Streamer.layer.pipe(Layer.provideMerge(WsHub.layer), Layer.provideMerge(LobbyRepo.layer)),
-  ),
-  Layer.provide(BunHttpServer.layer({ hostname: "0.0.0.0", port: 5551 })),
-);
+export const makeHttpLive = (hostname: string) =>
+  HttpRouter.serve(Routes).pipe(
+    Layer.provide(
+      Streamer.layer.pipe(Layer.provideMerge(WsHub.layer), Layer.provideMerge(LobbyRepo.layer)),
+    ),
+    Layer.provide(BunHttpServer.layer({ hostname, port: 5551 })),
+  );
+
+export const HttpLive = makeHttpLive("0.0.0.0");

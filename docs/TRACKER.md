@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `4.4` Loopback bind flag
+**Now:** `4.5` Distribution (later)
 
 **Goal:** phase 4 (app source + harden)
 
@@ -38,7 +38,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 4.1 | Broadcaster drop          | done   | slow Effect.never dropped; fast still receives |
 | 4.2 | Stats                     | done   | bytesOut 20 for two 10-byte frames; GET /api/stats |
 | 4.3 | Shutdown                  | done   | abort kills helper; POST /api/shutdown 1→0 capture procs |
-| 4.4 | Loopback bind flag        | todo   |                                     |
+| 4.4 | Loopback bind flag        | done   | `serve --loopback` listens 127.0.0.1:5551 |
 
 ## Lane D — CLI
 
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: stopAll finalizer. POST /api/shutdown killed fixture helper.
+- 2026-10-03: serve --loopback binds 127.0.0.1:5551.

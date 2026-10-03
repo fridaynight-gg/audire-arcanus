@@ -1,5 +1,5 @@
 const help = `audire
-  serve                 start HTTP on :5551
+  serve [--loopback]    start HTTP on :5551 (loopback = 127.0.0.1)
   lobby create NAME     create a lobby
   lobby list            list lobbies
   sources               list capture sources
@@ -86,6 +86,7 @@ if (cmd !== undefined && cmd !== "serve") {
 
 const { Layer } = await import("effect");
 const { BunRuntime } = await import("@effect/platform-bun");
-const { HttpLive } = await import("@audire/server");
+const { makeHttpLive } = await import("@audire/server");
 
-BunRuntime.runMain(Layer.launch(HttpLive));
+const hostname = process.argv.includes("--loopback") ? "127.0.0.1" : "0.0.0.0";
+BunRuntime.runMain(Layer.launch(makeHttpLive(hostname)));

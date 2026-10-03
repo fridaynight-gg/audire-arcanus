@@ -1,5 +1,5 @@
 import { Effect, Fiber, Layer } from "effect";
-import { HttpLive } from "@audire/server";
+import { HttpLive, makeHttpLive } from "@audire/server";
 import { BoxRenderable, TextRenderable, createCliRenderer } from "@opentui/core";
 import {
   formatLobbyPane,
@@ -38,7 +38,9 @@ const postStream = async (path: string, body: unknown): Promise<void> => {
   });
 };
 
-const httpFiber = Effect.runFork(Layer.launch(HttpLive));
+const httpFiber = Effect.runFork(
+  Layer.launch(process.argv.includes("--loopback") ? makeHttpLive("127.0.0.1") : HttpLive),
+);
 const halt = () => {
   Effect.runFork(Fiber.interrupt(httpFiber));
 };
