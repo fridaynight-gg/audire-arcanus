@@ -1,8 +1,10 @@
 const help = `audire
-  serve              start HTTP on :5551
-  lobby create NAME  create a lobby
-  lobby list         list lobbies
-  sources            list capture sources
+  serve                 start HTTP on :5551
+  lobby create NAME     create a lobby
+  lobby list            list lobbies
+  sources               list capture sources
+  stream start LOBBY_ID [--fixture sine | --mic ID]
+  stream stop LOBBY_ID
   --help
 `;
 
@@ -14,6 +16,15 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 }
 
 const [, , cmd, sub, ...rest] = process.argv;
+
+const postJson = async (path: string, body: unknown): Promise<string> => {
+  const res = await fetch(`${base}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return await res.text();
+};
 
 if (cmd === "lobby" && sub === "list") {
   const res = await fetch(`${base}/api/lobbies`);
@@ -29,12 +40,32 @@ if (cmd === "sources") {
 
 if (cmd === "lobby" && sub === "create") {
   const name = rest[0] ?? "lobby";
-  const res = await fetch(`${base}/api/lobbies`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  console.log(await res.text());
+  console.log(await postJson("/api/lobbies", { name }));
+  process.exit(0);
+}
+
+if (cmd === "stream" && sub === "stop") {
+  const lobbyId = rest[0];
+  if (lobbyId === undefined) {
+    console.error(help);
+    process.exit(1);
+  }
+  console.log(await postJson("/api/stream/stop", { lobbyId }));
+  process.exit(0);
+}
+
+if (cmd === "stream" && sub === "start") {
+  const lobbyId = rest[0];
+  if (lobbyId === undefined) {
+    console.error(help);
+    process.exit(1);
+  }
+  const micAt = rest.indexOf("--mic");
+  const source =
+    micAt >= 0
+      ? { _tag: "mic", id: rest[micAt + 1] ?? "default" }
+      : { _tag: "fixture", name: "sine" };
+  console.log(await postJson("/api/stream/start", { lobbyId, source }));
   process.exit(0);
 }
 

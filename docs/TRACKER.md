@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.6` CLI stream start fixture/mic
+**Now:** `2.7` TUI sources + start/stop
 
 **Goal:** phase 4 (app source + harden)
 
@@ -46,7 +46,7 @@ Update this file on every item. Ritual: one id, then commit.
 | --- | ------------------------ | ------ | ------------------------------------ |
 | 0.9 | `audire --help`          | done   |                                      |
 | 1.5 | lobby create/list        | done   | `lobby create studio` + `lobby list` |
-| 2.6 | stream start fixture/mic | todo   |                                      |
+| 2.6 | stream start fixture/mic | done   | `stream start ID --fixture sine` / `--mic 0`; stop |
 
 ## Lane E — Host TUI
 
@@ -89,4 +89,4 @@ Update this file on every item. Ritual: one id, then commit.
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: cpal mic list+capture. GET /api/sources. stream start source mic.
+- 2026-10-03: CLI stream start/stop fixture and mic.
