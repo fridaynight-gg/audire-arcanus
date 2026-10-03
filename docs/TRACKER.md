@@ -2,11 +2,11 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `1.8` Playwright join/roster/kick
+**Now:** `2.1` WS audio frames
 
 **Goal:** phase 4 (app source + harden)
 
-**Phase:** 1 in progress (HTTP lobbies proven; WS not yet)
+**Phase:** 2 (lobbies proven; audio next)
 
 ## Lane A — Docs / contract
 
@@ -61,7 +61,7 @@ Update this file on every item. Ritual: one id, then commit.
 | id  | item                | status | proof                                                       |
 | --- | ------------------- | ------ | ----------------------------------------------------------- |
 | 0.8 | Vite React stub     | done   |                                                             |
-| 1.7 | join + roster       | wip    | App.tsx POST /api/join + poll listeners; not browser-proved |
+| 1.7 | join + roster | done | Playwright two pages see alice/bob |
 | 2.5 | Worklet + wasm Opus | todo   |                                                             |
 
 ## Lane G — Capture
@@ -82,10 +82,10 @@ Update this file on every item. Ritual: one id, then commit.
 
 | id  | item                          | status | proof |
 | --- | ----------------------------- | ------ | ----- |
-| 1.8 | Playwright join/roster/kick   | todo   |       |
+| 1.8 | Playwright join/roster/kick | done | chromium: alice+bob roster, kick alice |
 | 2.8 | Headed fixture playback state | todo   |       |
 
 ## Log
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
-- 2026-10-03: TUI lobby pane + format tests. Next Playwright 1.8.
+- 2026-10-03: Playwright join/roster/kick passed on Chromium.

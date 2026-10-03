@@ -23,11 +23,13 @@ export function App() {
     if (!lobby) {
       return;
     }
-    const timer = setInterval(() => {
+    const load = () => {
       void fetch(`/api/lobbies/${lobby.id}/listeners`)
         .then((res) => res.json())
         .then((data: ReadonlyArray<Listener>) => setListeners(data));
-    }, 1000);
+    };
+    load();
+    const timer = setInterval(load, 1000);
     return () => clearInterval(timer);
   }, [lobby]);
 
@@ -52,7 +54,7 @@ export function App() {
       <main>
         <h1>{lobby.name}</h1>
         <p>Code {lobby.joinCode}</p>
-        <ul>
+        <ul aria-label="listeners">
           {listeners.map((item) => (
             <li key={item.id}>{item.username}</li>
           ))}
