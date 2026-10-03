@@ -22,4 +22,19 @@ describe("WsHub backpressure", () => {
       expect(received.length).toBeGreaterThan(0);
     }).pipe(Effect.provide(WsHub.layer)),
   );
+
+  it.effect("bytesOut matches frames sent", () =>
+    Effect.gen(function* () {
+      const hub = yield* WsHub;
+      yield* hub.add("lobby", "fast", () => Effect.void);
+      const frame = new Uint8Array(10);
+      yield* hub.broadcast("lobby", frame);
+      yield* Effect.yieldNow;
+      yield* hub.broadcast("lobby", frame);
+      const stats = yield* hub.stats;
+      expect(stats.bytesOut).toBe(20);
+      expect(stats.framesOut).toBe(2);
+      expect(stats.listeners).toBe(1);
+    }).pipe(Effect.provide(WsHub.layer)),
+  );
 });

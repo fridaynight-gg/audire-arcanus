@@ -155,6 +155,16 @@ const StartStream = HttpRouter.add(
   ),
 );
 
+const Stats = HttpRouter.add(
+  "GET",
+  "/api/stats",
+  Effect.gen(function* () {
+    const hub = yield* WsHub;
+    const stats = yield* hub.stats;
+    return jsonOk(stats);
+  }),
+);
+
 const StopStream = HttpRouter.add(
   "POST",
   "/api/stream/stop",
@@ -178,6 +188,7 @@ const Routes = Layer.mergeAll(
   Join,
   ListSources,
   CaptureStatus,
+  Stats,
   StartStream,
   StopStream,
   WsRoute,

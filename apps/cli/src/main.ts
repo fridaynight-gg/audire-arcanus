@@ -5,6 +5,7 @@ const help = `audire
   sources               list capture sources
   stream start LOBBY_ID [--fixture sine | --mic ID | --app PID]
   stream stop LOBBY_ID
+  stats                 bytes/frames/listeners
   --help
 `;
 
@@ -34,6 +35,12 @@ if (cmd === "lobby" && sub === "list") {
 
 if (cmd === "sources") {
   const res = await fetch(`${base}/api/sources`);
+  console.log(await res.text());
+  process.exit(0);
+}
+
+if (cmd === "stats") {
+  const res = await fetch(`${base}/api/stats`);
   console.log(await res.text());
   process.exit(0);
 }

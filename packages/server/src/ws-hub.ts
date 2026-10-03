@@ -23,6 +23,12 @@ export class WsHub extends Context.Service<
     readonly broadcast: (lobbyId: LobbyId, bytes: Uint8Array) => Effect.Effect<void>;
     readonly send: (listenerId: ListenerId, bytes: Uint8Array) => Effect.Effect<void>;
     readonly listenerCount: (lobbyId: LobbyId) => Effect.Effect<number>;
+    readonly stats: Effect.Effect<{
+      readonly bytesOut: number;
+      readonly framesOut: number;
+      readonly listeners: number;
+      readonly dropped: number;
+    }>;
   }
 >()("@audire/WsHub") {
   static readonly layer = Layer.effect(
@@ -30,6 +36,9 @@ export class WsHub extends Context.Service<
     Effect.sync(() => {
       const slots = new Map<ListenerId, Slot>();
       const rooms = new Map<LobbyId, Set<ListenerId>>();
+      let bytesOut = 0;
+      let framesOut = 0;
+      let dropped = 0;
 
       const remove = (listenerId: ListenerId) =>
         Effect.sync(() => {
@@ -49,6 +58,13 @@ export class WsHub extends Context.Service<
           }),
         remove,
         listenerCount: (lobbyId) => Effect.sync(() => rooms.get(lobbyId)?.size ?? 0),
+        stats: Effect.sync(() => {
+          let listeners = 0;
+          for (const room of rooms.values()) {
+            listeners += room.size;
+          }
+          return { bytesOut, framesOut, listeners, dropped };
+        }),
         broadcast: (lobbyId, bytes) =>
           Effect.gen(function* () {
             const room = rooms.get(lobbyId);
@@ -63,12 +79,15 @@ export class WsHub extends Context.Service<
               if (slot.busy) {
                 slot.skipped += 1;
                 if (slot.skipped > maxSkipped) {
+                  dropped += 1;
                   yield* remove(id);
                 }
                 continue;
               }
               slot.busy = true;
               slot.skipped = 0;
+              bytesOut += bytes.length;
+              framesOut += 1;
               yield* Effect.forkDetach(
                 slot.write(bytes).pipe(
                   Effect.ensuring(
