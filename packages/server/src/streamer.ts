@@ -11,6 +11,9 @@ const captureArgs = (source: StreamSource | undefined): Array<string> => {
   if (source?._tag === "mic") {
     return ["--mic", source.id];
   }
+  if (source?._tag === "app") {
+    return ["--app", String(source.pid)];
+  }
   return ["--fixture", "sine"];
 };
 

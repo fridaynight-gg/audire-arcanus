@@ -5,10 +5,13 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(target_os = "macos")]
+mod sck;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.iter().any(|a| a == "--help" || a == "-h") {
-        println!("audire-capture [--help] [--list] [--fixture sine] [--mic ID]");
+        println!("audire-capture [--help] [--list] [--fixture sine] [--mic ID] [--app PID]");
         println!("stdin: JSON commands  stdout: framed s16le PCM 48k stereo");
         return;
     }
@@ -26,6 +29,18 @@ fn main() {
     if let Some(idx) = args.iter().position(|a| a == "--mic") {
         let id = args.get(idx + 1).map(String::as_str).unwrap_or("default");
         if let Err(err) = capture_mic(id) {
+            eprintln!(
+                r#"{{"event":"error","tag":"PermissionDenied","message":"{}"}}"#,
+                err.replace('"', "'")
+            );
+            std::process::exit(1);
+        }
+        return;
+    }
+
+    if let Some(idx) = args.iter().position(|a| a == "--app") {
+        let pid = args.get(idx + 1).map(String::as_str).unwrap_or("");
+        if let Err(err) = capture_app(pid) {
             eprintln!(
                 r#"{{"event":"error","tag":"PermissionDenied","message":"{}"}}"#,
                 err.replace('"', "'")
@@ -138,7 +153,7 @@ fn emit_sine() {
     }
 }
 
-fn write_frame(out: &mut impl Write, pcm: &[u8]) -> io::Result<()> {
+pub(crate) fn write_frame(out: &mut impl Write, pcm: &[u8]) -> io::Result<()> {
     let len = (pcm.len() as u32).to_le_bytes();
     out.write_all(&len)?;
     out.write_all(pcm)?;
@@ -176,23 +191,7 @@ fn capture_mic(id: &str) -> Result<(), String> {
         )
         .map_err(|e| e.to_string())?;
     stream.play().map_err(|e| e.to_string())?;
-
-    let frame_samples = 960usize;
-    let mut acc: Vec<f32> = Vec::new();
-    let stdout = io::stdout();
-    let mut out = stdout.lock();
-    while let Ok(chunk) = rx.recv() {
-        acc.extend_from_slice(&chunk);
-        let needed = frame_samples * channels.max(1);
-        while acc.len() >= needed {
-            let take: Vec<f32> = acc.drain(..needed).collect();
-            let pcm = to_48k_stereo_s16(&take, sample_rate, channels, frame_samples);
-            if write_frame(&mut out, &pcm).is_err() {
-                return Ok(());
-            }
-        }
-    }
-    Ok(())
+    write_pcm_loop(rx, sample_rate, channels)
 }
 
 fn to_48k_stereo_s16(input: &[f32], rate: u32, channels: usize, out_frames: usize) -> Vec<u8> {
@@ -221,4 +220,37 @@ fn to_48k_stereo_s16(input: &[f32], rate: u32, channels: usize, out_frames: usiz
         pcm[o + 3] = rb[1];
     }
     pcm
+}
+
+pub(crate) fn write_pcm_loop(
+    rx: mpsc::Receiver<Vec<f32>>,
+    sample_rate: u32,
+    channels: usize,
+) -> Result<(), String> {
+    let frame_samples = 960usize;
+    let mut acc: Vec<f32> = Vec::new();
+    let stdout = io::stdout();
+    let mut out = stdout.lock();
+    while let Ok(chunk) = rx.recv() {
+        acc.extend_from_slice(&chunk);
+        let needed = frame_samples * channels.max(1);
+        while acc.len() >= needed {
+            let take: Vec<f32> = acc.drain(..needed).collect();
+            let pcm = to_48k_stereo_s16(&take, sample_rate, channels, frame_samples);
+            if write_frame(&mut out, &pcm).is_err() {
+                return Ok(());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn capture_app(pid: &str) -> Result<(), String> {
+    sck::capture_app(pid)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn capture_app(_pid: &str) -> Result<(), String> {
+    Err("app capture is macOS only".into())
 }

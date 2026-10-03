@@ -3,7 +3,7 @@ const help = `audire
   lobby create NAME     create a lobby
   lobby list            list lobbies
   sources               list capture sources
-  stream start LOBBY_ID [--fixture sine | --mic ID]
+  stream start LOBBY_ID [--fixture sine | --mic ID | --app PID]
   stream stop LOBBY_ID
   --help
 `;
@@ -61,10 +61,13 @@ if (cmd === "stream" && sub === "start") {
     process.exit(1);
   }
   const micAt = rest.indexOf("--mic");
+  const appAt = rest.indexOf("--app");
   const source =
-    micAt >= 0
-      ? { _tag: "mic", id: rest[micAt + 1] ?? "default" }
-      : { _tag: "fixture", name: "sine" };
+    appAt >= 0
+      ? { _tag: "app", pid: Number(rest[appAt + 1] ?? "0") }
+      : micAt >= 0
+        ? { _tag: "mic", id: rest[micAt + 1] ?? "default" }
+        : { _tag: "fixture", name: "sine" };
   console.log(await postJson("/api/stream/start", { lobbyId, source }));
   process.exit(0);
 }

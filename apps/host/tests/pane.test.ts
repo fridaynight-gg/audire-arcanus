@@ -48,6 +48,10 @@ describe("streamSourceBody", () => {
       _tag: "fixture",
       name: "sine",
     });
+    expect(streamSourceBody({ _tag: "app", pid: 12, name: "Music" })).toEqual({
+      _tag: "app",
+      pid: 12,
+    });
   });
 });
 

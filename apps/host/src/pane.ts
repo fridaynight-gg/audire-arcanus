@@ -26,17 +26,19 @@ export const formatSourceLine = (source: SourceRow): string => {
   return "fixture sine";
 };
 
-export const canStream = (
-  source: SourceRow,
-): source is Exclude<SourceRow, { readonly _tag: "app" }> => source._tag !== "app";
+export const canStream = (_source: SourceRow): boolean => true;
 
 export const streamSourceBody = (
-  source: Exclude<SourceRow, { readonly _tag: "app" }>,
+  source: SourceRow,
 ):
   | { readonly _tag: "mic"; readonly id: string }
-  | { readonly _tag: "fixture"; readonly name: "sine" } => {
+  | { readonly _tag: "fixture"; readonly name: "sine" }
+  | { readonly _tag: "app"; readonly pid: number } => {
   if (source._tag === "mic") {
     return { _tag: "mic", id: source.id };
+  }
+  if (source._tag === "app") {
+    return { _tag: "app", pid: source.pid };
   }
   return { _tag: "fixture", name: "sine" };
 };

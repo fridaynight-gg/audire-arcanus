@@ -30,7 +30,11 @@ export class StreamFixture extends Schema.TaggedClass<StreamFixture>("StreamFixt
   name: Schema.Literals(["sine"]),
 }) {}
 
-export const StreamSource = Schema.Union([StreamMic, StreamFixture]);
+export class StreamApp extends Schema.TaggedClass<StreamApp>("StreamApp")("app", {
+  pid: Schema.Number,
+}) {}
+
+export const StreamSource = Schema.Union([StreamMic, StreamFixture, StreamApp]);
 export type StreamSource = typeof StreamSource.Type;
 
 export class StreamLobby extends Schema.Class<StreamLobby>("StreamLobby")({
