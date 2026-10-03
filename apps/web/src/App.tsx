@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-
-type Lobby = {
-  id: string;
-  name: string;
-  joinCode: string;
-  listenerCount: number;
-};
+import { startPlayback, type PlayerState } from "./player.ts";
 
 type Listener = {
   id: string;
@@ -15,45 +9,49 @@ type Listener = {
 export function App() {
   const [username, setUsername] = useState("");
   const [joinCode, setJoinCode] = useState("");
-  const [lobby, setLobby] = useState<Lobby | null>(null);
+  const [lobbyName, setLobbyName] = useState("");
+  const [lobbyId, setLobbyId] = useState("");
+  const [code, setCode] = useState("");
   const [listeners, setListeners] = useState<ReadonlyArray<Listener>>([]);
   const [error, setError] = useState("");
+  const [player, setPlayer] = useState<PlayerState>("idle");
 
   useEffect(() => {
-    if (!lobby) {
+    if (!lobbyId) {
       return;
     }
     const load = () => {
-      void fetch(`/api/lobbies/${lobby.id}/listeners`)
+      void fetch(`/api/lobbies/${lobbyId}/listeners`)
         .then((res) => res.json())
         .then((data: ReadonlyArray<Listener>) => setListeners(data));
     };
     load();
     const timer = setInterval(load, 1000);
     return () => clearInterval(timer);
-  }, [lobby]);
+  }, [lobbyId]);
 
   const join = () => {
-    void fetch("/api/join", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ joinCode, username }),
-    }).then(async (res) => {
-      const data = (await res.json()) as { lobby?: Lobby; error?: string };
-      if (!res.ok || !data.lobby) {
-        setError(data.error ?? "join failed");
-        return;
-      }
-      setError("");
-      setLobby(data.lobby);
+    void startPlayback(
+      joinCode,
+      username,
+      (state) => setPlayer(state),
+      (name, shownCode, id) => {
+        setError("");
+        setLobbyName(name);
+        setCode(shownCode);
+        setLobbyId(id);
+      },
+    ).catch((cause: unknown) => {
+      setError(String(cause));
     });
   };
 
-  if (lobby) {
+  if (lobbyId) {
     return (
       <main>
-        <h1>{lobby.name}</h1>
-        <p>Code {lobby.joinCode}</p>
+        <h1>{lobbyName}</h1>
+        <p>Code {code}</p>
+        <p data-testid="player-state">{player}</p>
         <ul aria-label="listeners">
           {listeners.map((item) => (
             <li key={item.id}>{item.username}</li>

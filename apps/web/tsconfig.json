@@ -10,5 +10,6 @@
     "lib": ["ES2025", "DOM"]
   },
   "include": ["src"],
+  "exclude": ["src/player-worklet.ts"],
   "references": [{ "path": "../../packages/protocol" }]
 }

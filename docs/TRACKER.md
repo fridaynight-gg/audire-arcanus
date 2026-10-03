@@ -2,7 +2,7 @@
 
 Update this file on every item. Ritual: one id, then commit.
 
-**Now:** `2.5` Worklet + wasm Opus decode
+**Now:** `2.4` macOS mic capture
 
 **Goal:** phase 4 (app source + harden)
 
@@ -62,7 +62,7 @@ Update this file on every item. Ritual: one id, then commit.
 | --- | ------------------- | ------ | ----------------------------------------------------------- |
 | 0.8 | Vite React stub     | done   |                                                             |
 | 1.7 | join + roster | done | Playwright two pages see alice/bob |
-| 2.5 | Worklet + wasm Opus | todo   |                                                             |
+| 2.5 | Worklet + wasm Opus | done | Playwright player-state live |
 
 ## Lane G — Capture
 
@@ -83,10 +83,10 @@ Update this file on every item. Ritual: one id, then commit.
 | id  | item                          | status | proof |
 | --- | ----------------------------- | ------ | ----- |
 | 1.8 | Playwright join/roster/kick | done | chromium: alice+bob roster, kick alice |
-| 2.8 | Headed fixture playback state | todo   |       |
+| 2.8 | Headed fixture playback state | done | e2e/playback.spec.ts |
 
 ## Log
 
 - 2026-10-03: WS join control frame verified (`joined`). Hang HTTP handler after upgrade.
 - 2026-10-03: Playwright join/roster/kick passed on Chromium.
-- 2026-10-03: Opus encode via libopus-wasm. Packets ~430–636B. Next Worklet.
+- 2026-10-03: Worklet + wasm Opus. Playwright player-state live.
