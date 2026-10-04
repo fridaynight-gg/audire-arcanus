@@ -81,6 +81,7 @@ const runSession = (socket: NetSocket.Socket) =>
           yield* write(control({ _tag: "joined", lobby, listener }));
           const people = yield* repo.listenersFor(lobby.id);
           yield* hub.broadcast(lobby.id, control({ _tag: "roster", listeners: people }));
+          continue;
         }
 
         if (parsed._tag === "leave") {

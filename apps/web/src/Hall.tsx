@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { DiceToss } from "./DiceToss.tsx";
 import { type Anim, type Dir, drawFamiliar, drawPatron } from "./draw.ts";
 import { drawTavern } from "./draw-room.ts";
 import { cols, moveBody, rows, spawnX, spawnY, tile } from "./tavern-map.ts";
@@ -54,6 +55,8 @@ export function Hall({
   const bubbles = useRef(new Map<string, Bubble>());
   const frame = useRef(0);
   const [draft, setDraft] = useState("");
+  const [dice, setDice] = useState<{ readonly value: number | undefined } | undefined>(undefined);
+  const [banner, setBanner] = useState("");
   const chatting = useRef(false);
 
   useEffect(() => {
@@ -91,6 +94,7 @@ export function Hall({
 
       if (action === "roll") {
         event.preventDefault();
+        setDice({ value: undefined });
         send({ _tag: "roll", sides: 20 });
         return;
       }
@@ -162,16 +166,19 @@ export function Hall({
           bubbles.current.set(note.listenerId, {
             id: note.listenerId,
             text: note.text,
-            until: now + 4000,
+            until: now + 5000,
           });
+          setBanner(`${note.username ?? "someone"}: ${note.text}`);
         }
 
         if (note._tag === "rolled" && note.listenerId && note.value !== undefined) {
           bubbles.current.set(`${note.listenerId}-roll`, {
             id: `${note.listenerId}-roll`,
             text: `d20 ${String(note.value)}`,
-            until: now + 4000,
+            until: now + 5000,
           });
+          setDice({ value: note.value });
+          setBanner(`${note.username ?? "someone"} rolled ${String(note.value)}`);
         }
       }
 
@@ -250,10 +257,15 @@ export function Hall({
         const bubble = bubbles.current.get(who.id) ?? bubbles.current.get(`${who.id}-roll`);
 
         if (bubble && bubble.until > now) {
+          ctx.font = "16px sans-serif";
+          const label = bubble.text;
+          const wide = Math.min(220, Math.max(72, ctx.measureText(label).width + 16));
           ctx.fillStyle = "#efe6c9";
-          ctx.fillRect(who.x - 40, who.y - 52, 80, 16);
+          ctx.fillRect(who.x - wide / 2, who.y - 58, wide, 22);
+          ctx.strokeStyle = "#2a1810";
+          ctx.strokeRect(who.x - wide / 2, who.y - 58, wide, 22);
           ctx.fillStyle = "#2a1810";
-          ctx.fillText(bubble.text, who.x, who.y - 40);
+          ctx.fillText(label, who.x, who.y - 42);
         }
       };
 
@@ -287,6 +299,7 @@ export function Hall({
 
   return (
     <div className="relative mx-auto w-[min(768px,96vw)]">
+      {dice ? <DiceToss value={dice.value} onDone={() => setDice(undefined)} /> : null}
       <canvas
         ref={canvasRef}
         width={cols * tile}
@@ -310,6 +323,12 @@ export function Hall({
             const text = draft.trim().slice(0, 80);
 
             if (text.length > 0) {
+              bubbles.current.set(selfId, {
+                id: selfId,
+                text,
+                until: performance.now() + 5000,
+              });
+              setBanner(`${selfName}: ${text}`);
               send({ _tag: "say", text });
             }
 
@@ -329,11 +348,15 @@ export function Hall({
         <button
           type="button"
           className="border-2 border-soot bg-ember px-4 py-2 font-display text-parchment uppercase"
-          onClick={() => send({ _tag: "roll", sides: 20 })}
+          onClick={() => {
+            setDice({ value: undefined });
+            send({ _tag: "roll", sides: 20 });
+          }}
         >
           d20
         </button>
       </div>
+      {banner ? <p className="mt-3 text-center font-pixel text-glow">{banner}</p> : null}
     </div>
   );
 }
