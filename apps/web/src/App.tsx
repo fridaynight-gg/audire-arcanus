@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Hall } from "./Hall.tsx";
 import { startPlayback, type ControlNote, type Playback, type PlayerState } from "./player.ts";
 import { defaultAvatar, defaultPet, portraits, pets } from "./portraits.ts";
@@ -31,8 +31,8 @@ export function App() {
   const [listeners, setListeners] = useState<ReadonlyArray<Listener>>([]);
   const [error, setError] = useState("");
   const [player, setPlayer] = useState<PlayerState>("idle");
-  const [note, setNote] = useState<ControlNote | undefined>(undefined);
   const [playback, setPlayback] = useState<Playback | undefined>(undefined);
+  const inbox = useRef<Array<ControlNote>>([]);
 
   useEffect(() => {
     if (!lobbyId) {
@@ -66,7 +66,9 @@ export function App() {
         setLobbyId(id);
         setSelfId(listenerId);
       },
-      (incoming) => setNote(incoming),
+      (incoming) => {
+        inbox.current.push(incoming);
+      },
     )
       .then((handle) => setPlayback(handle))
       .catch((cause: unknown) => {
@@ -96,7 +98,8 @@ export function App() {
               avatar={avatar}
               pet={pet}
               send={playback.send}
-              note={note}
+              inbox={inbox}
+              listeners={listeners}
             />
           ) : null}
           <ul aria-label="listeners" className="sr-only">

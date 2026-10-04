@@ -31,14 +31,21 @@ export function Hall({
   avatar,
   pet,
   send,
-  note,
+  inbox,
+  listeners,
 }: {
   readonly selfId: string;
   readonly selfName: string;
   readonly avatar: string;
   readonly pet: string;
   readonly send: (msg: { readonly _tag: string } & Record<string, unknown>) => void;
-  readonly note: ControlNote | undefined;
+  readonly inbox: { current: Array<ControlNote> };
+  readonly listeners: ReadonlyArray<{
+    readonly id: string;
+    readonly username: string;
+    readonly avatar?: string;
+    readonly pet?: string;
+  }>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const self = useRef({ x: spawnX, y: spawnY, dir: "down" as Dir, anim: "idle" as Anim });
@@ -49,39 +56,23 @@ export function Hall({
   const chatting = useRef(false);
 
   useEffect(() => {
-    if (note === undefined) {
-      return;
-    }
+    for (const item of listeners) {
+      if (item.id === selfId || peers.current.has(item.id)) {
+        continue;
+      }
 
-    if (note._tag === "posed" && note.listenerId && note.listenerId !== selfId) {
-      peers.current.set(note.listenerId, {
-        id: note.listenerId,
-        username: note.username ?? "guest",
-        avatar: note.avatar ?? "wizard",
-        pet: note.pet ?? "none",
-        x: note.x ?? spawnX,
-        y: note.y ?? spawnY,
-        dir: note.dir ?? "down",
-        anim: note.anim ?? "idle",
+      peers.current.set(item.id, {
+        id: item.id,
+        username: item.username,
+        avatar: item.avatar ?? "wizard",
+        pet: item.pet ?? "none",
+        x: spawnX + 24,
+        y: spawnY,
+        dir: "down",
+        anim: "idle",
       });
     }
-
-    if (note._tag === "said" && note.listenerId && note.text) {
-      bubbles.current.set(note.listenerId, {
-        id: note.listenerId,
-        text: note.text,
-        until: performance.now() + 4000,
-      });
-    }
-
-    if (note._tag === "rolled" && note.listenerId && note.value !== undefined) {
-      bubbles.current.set(`${note.listenerId}-roll`, {
-        id: `${note.listenerId}-roll`,
-        text: `d20 ${String(note.value)}`,
-        until: performance.now() + 4000,
-      });
-    }
-  }, [note, selfId]);
+  }, [listeners, selfId]);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -139,6 +130,39 @@ export function Hall({
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       frame.current += 1;
+
+      const incoming = inbox.current.splice(0);
+
+      for (const note of incoming) {
+        if (note._tag === "posed" && note.listenerId && note.listenerId !== selfId) {
+          peers.current.set(note.listenerId, {
+            id: note.listenerId,
+            username: note.username ?? "guest",
+            avatar: note.avatar ?? "wizard",
+            pet: note.pet ?? "none",
+            x: note.x ?? spawnX,
+            y: note.y ?? spawnY,
+            dir: note.dir ?? "down",
+            anim: note.anim ?? "idle",
+          });
+        }
+
+        if (note._tag === "said" && note.listenerId && note.text) {
+          bubbles.current.set(note.listenerId, {
+            id: note.listenerId,
+            text: note.text,
+            until: now + 4000,
+          });
+        }
+
+        if (note._tag === "rolled" && note.listenerId && note.value !== undefined) {
+          bubbles.current.set(`${note.listenerId}-roll`, {
+            id: `${note.listenerId}-roll`,
+            text: `d20 ${String(note.value)}`,
+            until: now + 4000,
+          });
+        }
+      }
 
       let dx = 0;
       let dy = 0;
@@ -248,7 +272,7 @@ export function Hall({
     raf = requestAnimationFrame(tick);
 
     return () => cancelAnimationFrame(raf);
-  }, [avatar, pet, selfId, selfName, send]);
+  }, [avatar, pet, inbox, selfId, selfName, send]);
 
   return (
     <div className="relative mx-auto w-[min(768px,96vw)]">

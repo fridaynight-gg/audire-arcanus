@@ -265,6 +265,38 @@ export const drawPatron = (
       mirror,
     );
   }
+
+  if (id === "barbarian") {
+    stamp(
+      ctx,
+      ["aa..............", "aaa............."],
+      originX - 4,
+      originY + 14,
+      2,
+      swatch,
+      mirror,
+    );
+  }
+
+  if (id === "paladin" || id === "fighter") {
+    stamp(ctx, ["......aaaa......", ".....aaaaaa....."], originX, originY - 2, 2, swatch, mirror);
+  }
+
+  if (id === "ranger" || id === "druid") {
+    stamp(
+      ctx,
+      ["..............aa", ".............aaa"],
+      originX + 4,
+      originY + 10,
+      2,
+      swatch,
+      mirror,
+    );
+  }
+
+  if (id === "rogue") {
+    stamp(ctx, [".....hhhhhh....."], originX, originY + 6, 2, swatch, mirror);
+  }
 };
 
 export const drawFamiliar = (
