@@ -250,7 +250,21 @@ export const drawPatron = (
   const walking = anim === "walk" && frame % 2 === 1;
   const rows = dir === "up" ? upIdle : walking ? downWalk : downIdle;
   const mirror = dir === "left";
-  stamp(ctx, rows, Math.round(x) - 16, Math.round(y) - 24, 2, swatch, mirror);
+  const originX = Math.round(x) - 16;
+  const originY = Math.round(y) - 24;
+  stamp(ctx, rows, originX, originY, 2, swatch, mirror);
+
+  if (id === "wizard" || id === "warlock") {
+    stamp(
+      ctx,
+      [".......aa.......", "......aaaa......", ".....aaaaaa....."],
+      originX,
+      originY - 6,
+      2,
+      swatch,
+      mirror,
+    );
+  }
 };
 
 export const drawFamiliar = (

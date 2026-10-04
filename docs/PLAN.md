@@ -40,6 +40,7 @@ Proof: two browsers join; roster updates; kick works; CLI can create/list lobbie
 - `1.10` TUI theme picker (`t`) matching OpenCode default themes
 - `1.11` Web tavern join (avatar, pet, roster hall)
 - `1.12` Tavern walk, chat bubbles, shared d20
+- `1.13` Pixel tavern room art (bar, tables, lanterns)
 
 ## Phase 2 — Mic + Opus + Worklet (macOS first)
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { defaultAvatar, defaultPet, portraitOf, portraits, petOf, pets } from "../src/portraits.ts";
-import { moveBody, tavernBlocked } from "../src/tavern-map.ts";
+import { moveBody, tavernBlocked, tileKind } from "../src/tavern-map.ts";
 import { rollDie } from "../src/dice.ts";
 
 describe("portraits", () => {
@@ -28,6 +28,15 @@ describe("portraits", () => {
     expect(portraitOf("missing").id).toBe(defaultAvatar);
     expect(petOf("missing").id).toBe(defaultPet);
     expect(petOf("none").label).toBe("None");
+  });
+});
+
+describe("tileKind", () => {
+  it("labels floor, wall, bar, and tables", () => {
+    expect(tileKind(12, 14)).toBe("floor");
+    expect(tileKind(0, 0)).toBe("wall");
+    expect(tileKind(12, 2)).toBe("bar");
+    expect(tileKind(9, 7)).toBe("table");
   });
 });
 

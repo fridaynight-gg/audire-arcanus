@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { type Anim, type Dir, drawFamiliar, drawPatron } from "./draw.ts";
+import { drawTavern } from "./draw-room.ts";
 import { cols, moveBody, rows, spawnX, spawnY, tile } from "./tavern-map.ts";
 import type { ControlNote } from "./player.ts";
 
@@ -197,27 +198,8 @@ export function Hall({
         });
       }
 
-      const width = cols * tile;
-      const height = rows * tile;
       ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = "#5c3d24";
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.fillStyle = "#3a2416";
-      ctx.fillRect(0, 0, width, tile);
-      ctx.fillRect(0, height - tile, width, tile);
-      ctx.fillRect(0, 0, tile, height);
-      ctx.fillRect(width - tile, 0, tile, height);
-
-      ctx.fillStyle = "#2a1810";
-      ctx.fillRect(3 * tile, 2 * tile, 18 * tile, tile);
-      ctx.fillStyle = "#c45c26";
-      ctx.fillRect(11 * tile, 2 * tile, 2 * tile, tile);
-
-      ctx.fillStyle = "#8b5a2b";
-      ctx.fillRect(8 * tile, 7 * tile, 3 * tile, 2 * tile);
-      ctx.fillRect(14 * tile, 7 * tile, 3 * tile, 2 * tile);
-      ctx.fillRect(6 * tile, 11 * tile, 3 * tile, 2 * tile);
+      drawTavern(ctx, now);
 
       const bob = Math.floor(now / 180);
 
@@ -240,18 +222,23 @@ export function Hall({
         }
       };
 
-      paint({
-        id: selfId,
-        username: selfName,
-        avatar,
-        pet,
-        x: self.current.x,
-        y: self.current.y,
-        dir: self.current.dir,
-        anim: self.current.anim,
-      });
+      const crowd: Array<Peer> = [
+        {
+          id: selfId,
+          username: selfName,
+          avatar,
+          pet,
+          x: self.current.x,
+          y: self.current.y,
+          dir: self.current.dir,
+          anim: self.current.anim,
+        },
+        ...peers.current.values(),
+      ];
 
-      for (const who of peers.current.values()) {
+      crowd.sort((a, b) => a.y - b.y);
+
+      for (const who of crowd) {
         paint(who);
       }
 

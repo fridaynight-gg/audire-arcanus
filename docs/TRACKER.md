@@ -66,6 +66,7 @@ Update this file on every item. Ritual: one id, then commit.
 | 1.7  | join + roster       | done   | Playwright two pages see alice/bob   |
 | 1.11 | tavern join UX      | done   | portraits tests; avatar/pet on join  |
 | 1.12 | hall walk chat dice | done   | 12 classes; pose/say/roll; map tests |
+| 1.13 | tavern room art     | done   | tile kinds; bar/tables/lanterns      |
 | 2.5  | Worklet + wasm Opus | done   | Playwright player-state live         |
 
 ## Lane G — Capture
@@ -91,6 +92,7 @@ Update this file on every item. Ritual: one id, then commit.
 
 ## Log
 
+- 2026-10-04: pixel tavern room (wood, bar, tables, lanterns, barrels); walk/chat/d20 unchanged.
 - 2026-10-04: tavern hall walk/chat/d20; 12 class visages; animated pet followers.
 - 2026-10-04: web tavern join (Tailwind 4); visage + companion; roster as patrons.
 - 2026-10-04: t opens Themes modal (OpenCode default ids); arrows preview, enter apply, esc cancel.
