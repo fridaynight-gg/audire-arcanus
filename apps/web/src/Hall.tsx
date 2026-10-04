@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Anim, type Dir, drawFamiliar, drawPatron } from "./draw.ts";
 import { drawTavern } from "./draw-room.ts";
 import { cols, moveBody, rows, spawnX, spawnY, tile } from "./tavern-map.ts";
+import { routeHallKey } from "./hall-keys.ts";
 import type { ControlNote } from "./player.ts";
 
 type Peer = {
@@ -22,8 +23,6 @@ type Bubble = {
 };
 
 const speed = 90;
-
-const keys = new Set<string>();
 
 export function Hall({
   selfId,
@@ -48,6 +47,8 @@ export function Hall({
   }>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sayRef = useRef<HTMLInputElement>(null);
+  const keys = useRef(new Set<string>());
   const self = useRef({ x: spawnX, y: spawnY, dir: "down" as Dir, anim: "idle" as Anim });
   const peers = useRef(new Map<string, Peer>());
   const bubbles = useRef(new Map<string, Bubble>());
@@ -76,35 +77,45 @@ export function Hall({
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement) {
+      const action = routeHallKey(event.key, event.target instanceof HTMLInputElement);
+
+      if (action === "ignore") {
         return;
       }
 
-      if (event.key === "Enter") {
-        chatting.current = true;
+      if (action === "focus-say") {
         event.preventDefault();
+        sayRef.current?.focus();
         return;
       }
 
-      if (event.key === "r" || event.key === "R") {
+      if (action === "roll") {
+        event.preventDefault();
         send({ _tag: "roll", sides: 20 });
-        event.preventDefault();
         return;
       }
 
-      keys.add(event.key);
+      event.preventDefault();
+      keys.current.add(event.key);
     };
 
     const up = (event: KeyboardEvent) => {
-      keys.delete(event.key);
+      keys.current.delete(event.key);
+    };
+
+    const blur = () => {
+      keys.current.clear();
     };
 
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
 
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+      keys.current.clear();
     };
   }, [send]);
 
@@ -168,19 +179,19 @@ export function Hall({
       let dy = 0;
 
       if (!chatting.current) {
-        if (keys.has("ArrowLeft") || keys.has("a") || keys.has("A")) {
+        if (keys.current.has("ArrowLeft") || keys.current.has("a") || keys.current.has("A")) {
           dx -= 1;
         }
 
-        if (keys.has("ArrowRight") || keys.has("d") || keys.has("D")) {
+        if (keys.current.has("ArrowRight") || keys.current.has("d") || keys.current.has("D")) {
           dx += 1;
         }
 
-        if (keys.has("ArrowUp") || keys.has("w") || keys.has("W")) {
+        if (keys.current.has("ArrowUp") || keys.current.has("w") || keys.current.has("W")) {
           dy -= 1;
         }
 
-        if (keys.has("ArrowDown") || keys.has("s") || keys.has("S")) {
+        if (keys.current.has("ArrowDown") || keys.current.has("s") || keys.current.has("S")) {
           dy += 1;
         }
       }
@@ -285,9 +296,10 @@ export function Hall({
       />
       <div className="mt-3 flex gap-2">
         <input
+          ref={sayRef}
           className="flex-1 border-2 border-oak bg-parchment px-3 py-2 font-pixel text-ink"
           value={draft}
-          placeholder={chatting.current ? "Speak…" : "Enter to speak · R to roll"}
+          placeholder="Enter to speak · R to roll"
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key !== "Enter") {
@@ -303,6 +315,7 @@ export function Hall({
 
             setDraft("");
             chatting.current = false;
+            canvasRef.current?.focus();
           }}
           onFocus={() => {
             chatting.current = true;
