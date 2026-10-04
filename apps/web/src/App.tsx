@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { shouldConnect } from "./connect.ts";
 import { Hall } from "./Hall.tsx";
 import { startPlayback, type ControlNote, type Playback, type PlayerState } from "./player.ts";
 import { defaultAvatar, defaultPet, portraits, pets } from "./portraits.ts";
@@ -35,12 +36,18 @@ export function App() {
   const [playback, setPlayback] = useState<Playback | undefined>(undefined);
   const inbox = useRef<Array<ControlNote>>([]);
   const started = useRef(false);
+  const seq = useRef(0);
+  const handleRef = useRef<Playback | undefined>(undefined);
 
-  const connect = (name: string, code: string, face: string, companion: string) => {
-    if (started.current) {
+  const connect = (name: string, code: string, face: string, companion: string, force: boolean) => {
+    if (!shouldConnect(started.current, force)) {
       return;
     }
 
+    handleRef.current?.stop();
+    handleRef.current = undefined;
+    setPlayback(undefined);
+    const token = ++seq.current;
     started.current = true;
     void startPlayback(
       code,
@@ -49,6 +56,10 @@ export function App() {
       companion,
       (state) => setPlayer(state),
       (lobbyTitle, shownCode, id, listenerId) => {
+        if (token !== seq.current) {
+          return;
+        }
+
         setError("");
         setLobbyName(lobbyTitle);
         setCode(shownCode);
@@ -62,11 +73,27 @@ export function App() {
         });
       },
       (incoming) => {
+        if (token !== seq.current) {
+          return;
+        }
+
         inbox.current.push(incoming);
       },
     )
-      .then((handle) => setPlayback(handle))
+      .then((handle) => {
+        if (token !== seq.current) {
+          handle.stop();
+          return;
+        }
+
+        handleRef.current = handle;
+        setPlayback(handle);
+      })
       .catch((cause: unknown) => {
+        if (token !== seq.current) {
+          return;
+        }
+
         started.current = false;
         setError(String(cause));
       });
@@ -83,7 +110,7 @@ export function App() {
     setJoinCode(seat.joinCode);
     setAvatar(seat.avatar);
     setPet(seat.pet);
-    connect(seat.username, seat.joinCode, seat.avatar, seat.pet);
+    connect(seat.username, seat.joinCode, seat.avatar, seat.pet, false);
   }, []);
 
   useEffect(() => {
@@ -105,10 +132,13 @@ export function App() {
   }, [lobbyId]);
 
   const join = () => {
-    connect(username, joinCode, avatar, pet);
+    connect(username, joinCode, avatar, pet, true);
   };
 
   const leave = () => {
+    seq.current += 1;
+    handleRef.current?.stop();
+    handleRef.current = undefined;
     playback?.stop();
     clearSeat(sessionStorage);
     started.current = false;
@@ -145,6 +175,7 @@ export function App() {
               avatar={avatar}
               pet={pet}
               send={playback.send}
+              unlock={playback.unlock}
               inbox={inbox}
               listeners={listeners}
               onLeave={leave}

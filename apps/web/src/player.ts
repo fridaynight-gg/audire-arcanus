@@ -22,6 +22,7 @@ export type ControlNote = {
 export type Playback = {
   readonly stop: () => void;
   readonly send: (msg: { readonly _tag: string } & Record<string, unknown>) => void;
+  readonly unlock: () => void;
 };
 
 const frameDuration = 960 / 48000;
@@ -51,7 +52,6 @@ export const startPlayback = async (
 ): Promise<Playback> => {
   const decoder = await createDecoder({ sampleRate: 48000, channels: 2 });
   const ctx = new AudioContext({ sampleRate: 48000 });
-  await ctx.resume();
   const gain = ctx.createGain();
   gain.connect(ctx.destination);
   let next = 0;
@@ -110,6 +110,10 @@ export const startPlayback = async (
     }
 
     if (frame.type === FrameType.opus) {
+      if (ctx.state === "suspended") {
+        void ctx.resume();
+      }
+
       const media = decodeMediaPayload(frame.payload);
 
       if (!media) {
@@ -144,5 +148,8 @@ export const startPlayback = async (
       decoder.free();
     },
     send,
+    unlock: () => {
+      void ctx.resume();
+    },
   };
 };

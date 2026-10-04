@@ -31,6 +31,7 @@ export function Hall({
   avatar,
   pet,
   send,
+  unlock,
   inbox,
   listeners,
   onLeave,
@@ -40,6 +41,7 @@ export function Hall({
   readonly avatar: string;
   readonly pet: string;
   readonly send: (msg: { readonly _tag: string } & Record<string, unknown>) => void;
+  readonly unlock: () => void;
   readonly inbox: { current: Array<ControlNote> };
   readonly listeners: ReadonlyArray<{
     readonly id: string;
@@ -82,6 +84,7 @@ export function Hall({
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
+      unlock();
       const action = routeHallKey(event.key, event.target instanceof HTMLInputElement);
 
       if (action === "ignore") {
@@ -123,7 +126,7 @@ export function Hall({
       window.removeEventListener("blur", blur);
       keys.current.clear();
     };
-  }, [send]);
+  }, [send, unlock]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -308,6 +311,7 @@ export function Hall({
         height={rows * tile}
         tabIndex={0}
         className="w-full border-4 border-beam [image-rendering:pixelated] outline-none"
+        onPointerDown={() => unlock()}
         onMouseMove={(event) => {
           const box = event.currentTarget.getBoundingClientRect();
           const x = ((event.clientX - box.left) / box.width) * event.currentTarget.width;
