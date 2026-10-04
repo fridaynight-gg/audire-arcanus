@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Hall } from "./Hall.tsx";
 import { startPlayback, type ControlNote, type Playback, type PlayerState } from "./player.ts";
 import { defaultAvatar, defaultPet, portraits, pets } from "./portraits.ts";
+import { readSeat, writeSeat } from "./seat.ts";
 import { Familiar, Sprite } from "./sprites.tsx";
 
 type Listener = {
@@ -33,6 +34,57 @@ export function App() {
   const [player, setPlayer] = useState<PlayerState>("idle");
   const [playback, setPlayback] = useState<Playback | undefined>(undefined);
   const inbox = useRef<Array<ControlNote>>([]);
+  const started = useRef(false);
+
+  const connect = (name: string, code: string, face: string, companion: string) => {
+    if (started.current) {
+      return;
+    }
+
+    started.current = true;
+    void startPlayback(
+      code,
+      name,
+      face,
+      companion,
+      (state) => setPlayer(state),
+      (lobbyTitle, shownCode, id, listenerId) => {
+        setError("");
+        setLobbyName(lobbyTitle);
+        setCode(shownCode);
+        setLobbyId(id);
+        setSelfId(listenerId);
+        writeSeat(sessionStorage, {
+          username: name,
+          joinCode: shownCode,
+          avatar: face,
+          pet: companion,
+        });
+      },
+      (incoming) => {
+        inbox.current.push(incoming);
+      },
+    )
+      .then((handle) => setPlayback(handle))
+      .catch((cause: unknown) => {
+        started.current = false;
+        setError(String(cause));
+      });
+  };
+
+  useEffect(() => {
+    const seat = readSeat(sessionStorage);
+
+    if (seat === undefined) {
+      return;
+    }
+
+    setUsername(seat.username);
+    setJoinCode(seat.joinCode);
+    setAvatar(seat.avatar);
+    setPet(seat.pet);
+    connect(seat.username, seat.joinCode, seat.avatar, seat.pet);
+  }, []);
 
   useEffect(() => {
     if (!lobbyId) {
@@ -53,27 +105,7 @@ export function App() {
   }, [lobbyId]);
 
   const join = () => {
-    void startPlayback(
-      joinCode,
-      username,
-      avatar,
-      pet,
-      (state) => setPlayer(state),
-      (name, shownCode, id, listenerId) => {
-        setError("");
-        setLobbyName(name);
-        setCode(shownCode);
-        setLobbyId(id);
-        setSelfId(listenerId);
-      },
-      (incoming) => {
-        inbox.current.push(incoming);
-      },
-    )
-      .then((handle) => setPlayback(handle))
-      .catch((cause: unknown) => {
-        setError(String(cause));
-      });
+    connect(username, joinCode, avatar, pet);
   };
 
   if (lobbyId) {
