@@ -23,6 +23,8 @@ export class LobbyRepo extends Context.Service<
     readonly addListener: (
       lobbyId: LobbyId,
       username: Username,
+      avatar: string,
+      pet: string,
     ) => Effect.Effect<Listener, LobbyNotFound>;
     readonly removeListener: (listenerId: ListenerId) => Effect.Effect<Listener, ListenerNotFound>;
     readonly listenersFor: (
@@ -88,13 +90,15 @@ export class LobbyRepo extends Context.Service<
               lobbies.delete(id);
             }),
           ),
-        addListener: (lobbyId: LobbyId, username: Username) =>
+        addListener: (lobbyId: LobbyId, username: Username, avatar: string, pet: string) =>
           get(lobbyId).pipe(
             Effect.map((lobby) => {
               const listener = new Listener({
                 id: crypto.randomUUID(),
                 lobbyId,
                 username,
+                avatar,
+                pet,
                 connectedAt: new Date(),
               });
               people.set(listener.id, listener);

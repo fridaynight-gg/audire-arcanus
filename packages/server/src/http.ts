@@ -96,7 +96,12 @@ const Join = HttpRouter.add(
     const repo = yield* LobbyRepo;
     const body = yield* HttpServerRequest.schemaBodyJson(JoinLobby);
     const lobby = yield* repo.byCode(body.joinCode);
-    const listener = yield* repo.addListener(lobby.id, body.username);
+    const listener = yield* repo.addListener(
+      lobby.id,
+      body.username,
+      body.avatar ?? "wizard",
+      body.pet ?? "none",
+    );
     return jsonOk({ lobby, listener });
   }).pipe(Effect.catchTag("LobbyNotFound", () => Effect.succeed(jsonErr("LobbyNotFound", 404)))),
 );

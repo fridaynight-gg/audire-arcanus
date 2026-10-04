@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cinzel", ui-serif, Georgia, serif;
+  --font-pixel: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #2a1810;
+  --color-parchment: #e8d5b5;
+  --color-oak: #5c3317;
+  --color-ember: #c45c26;
+  --color-candle: #f0c36a;
+  --color-wine: #6b1d2a;
+  --color-moss: #3d5c3a;
+  --color-floor: #1c120c;
+  --color-beam: #3a2416;
+  --color-soot: #120b08;
+  --color-glow: #f6d48a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

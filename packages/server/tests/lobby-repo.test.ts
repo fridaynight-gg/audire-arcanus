@@ -20,9 +20,11 @@ describe("LobbyRepo", () => {
       const lobby = yield* repo.create("beta");
       const found = yield* repo.byCode(lobby.joinCode);
       expect(found.id).toBe(lobby.id);
-      const listener = yield* repo.addListener(lobby.id, "nebula");
+      const listener = yield* repo.addListener(lobby.id, "nebula", "bard", "raven");
       const people = yield* repo.listenersFor(lobby.id);
       expect(people.map((item) => item.username)).toEqual(["nebula"]);
+      expect(people[0]?.avatar).toBe("bard");
+      expect(people[0]?.pet).toBe("raven");
       yield* repo.removeListener(listener.id);
       const after = yield* repo.listenersFor(lobby.id);
       expect(after.length).toBe(0);

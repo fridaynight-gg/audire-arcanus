@@ -62,7 +62,12 @@ const runSession = (socket: NetSocket.Socket) =>
         }
         if (parsed._tag === "join") {
           const lobby = yield* repo.byCode(parsed.joinCode);
-          const listener = yield* repo.addListener(lobby.id, parsed.username);
+          const listener = yield* repo.addListener(
+            lobby.id,
+            parsed.username,
+            parsed.avatar ?? "wizard",
+            parsed.pet ?? "none",
+          );
           listenerId = listener.id;
           lobbyId = lobby.id;
           yield* hub.add(lobby.id, listener.id, write);

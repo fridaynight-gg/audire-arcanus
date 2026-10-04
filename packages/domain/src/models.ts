@@ -14,5 +14,7 @@ export class Listener extends Schema.Class<Listener>("Listener")({
   id: ListenerId,
   lobbyId: LobbyId,
   username: Username,
+  avatar: Schema.optional(Schema.String),
+  pet: Schema.optional(Schema.String),
   connectedAt: Schema.Date,
 }) {}

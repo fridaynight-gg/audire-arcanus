@@ -16,6 +16,8 @@ export class KickListener extends Schema.Class<KickListener>("KickListener")({
 export class JoinLobby extends Schema.Class<JoinLobby>("JoinLobby")({
   joinCode: JoinCode,
   username: Schema.String,
+  avatar: Schema.optional(Schema.String),
+  pet: Schema.optional(Schema.String),
 }) {}
 
 export class IdParam extends Schema.Class<IdParam>("IdParam")({
