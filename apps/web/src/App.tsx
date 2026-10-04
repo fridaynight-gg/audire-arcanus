@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { startPlayback, type PlayerState } from "./player.ts";
-import { defaultAvatar, defaultPet, petOf, pets, portraitOf, portraits } from "./portraits.ts";
+import { Hall } from "./Hall.tsx";
+import { startPlayback, type ControlNote, type Playback, type PlayerState } from "./player.ts";
+import { defaultAvatar, defaultPet, portraits, pets } from "./portraits.ts";
 import { Familiar, Sprite } from "./sprites.tsx";
 
 type Listener = {
@@ -25,10 +26,13 @@ export function App() {
   const [pet, setPet] = useState(defaultPet);
   const [lobbyName, setLobbyName] = useState("");
   const [lobbyId, setLobbyId] = useState("");
+  const [selfId, setSelfId] = useState("");
   const [code, setCode] = useState("");
   const [listeners, setListeners] = useState<ReadonlyArray<Listener>>([]);
   const [error, setError] = useState("");
   const [player, setPlayer] = useState<PlayerState>("idle");
+  const [note, setNote] = useState<ControlNote | undefined>(undefined);
+  const [playback, setPlayback] = useState<Playback | undefined>(undefined);
 
   useEffect(() => {
     if (!lobbyId) {
@@ -55,15 +59,19 @@ export function App() {
       avatar,
       pet,
       (state) => setPlayer(state),
-      (name, shownCode, id) => {
+      (name, shownCode, id, listenerId) => {
         setError("");
         setLobbyName(name);
         setCode(shownCode);
         setLobbyId(id);
+        setSelfId(listenerId);
       },
-    ).catch((cause: unknown) => {
-      setError(String(cause));
-    });
+      (incoming) => setNote(incoming),
+    )
+      .then((handle) => setPlayback(handle))
+      .catch((cause: unknown) => {
+        setError(String(cause));
+      });
   };
 
   if (lobbyId) {
@@ -80,33 +88,21 @@ export function App() {
           <h1 className="font-display text-3xl text-glow">{lobbyName}</h1>
           <p className="mt-1 text-candle">Code {code}</p>
         </header>
-        <section
-          className="relative mx-auto mt-10 w-[min(56rem,94vw)] border-4 border-beam bg-beam/80 p-6"
-          aria-label="the common room"
-        >
-          <div
-            className="mx-auto mb-6 h-16 w-24 bg-ember shadow-[0_0_40px_#f0c36a] motion-safe:animate-pulse"
-            aria-hidden="true"
-          />
-          <div className="mx-auto mb-8 h-4 w-2/3 rounded-full bg-oak" aria-hidden="true" />
-          <ul aria-label="listeners" className="flex flex-wrap justify-center gap-6">
-            {listeners.map((item) => {
-              const face = portraitOf(item.avatar ?? defaultAvatar);
-              const companion = petOf(item.pet ?? defaultPet);
-
-              return (
-                <li
-                  key={item.id}
-                  className="flex w-24 flex-col items-center gap-1 border-2 border-candle/20 bg-soot/50 p-2"
-                >
-                  <Sprite id={face.id} />
-                  {companion.id === "none" ? null : <Familiar id={companion.id} />}
-                  <span className="max-w-full truncate text-center text-xs text-glow">
-                    {item.username}
-                  </span>
-                </li>
-              );
-            })}
+        <section className="relative mx-auto mt-6 w-[min(56rem,96vw)]" aria-label="the common room">
+          {playback ? (
+            <Hall
+              selfId={selfId}
+              selfName={username}
+              avatar={avatar}
+              pet={pet}
+              send={playback.send}
+              note={note}
+            />
+          ) : null}
+          <ul aria-label="listeners" className="sr-only">
+            {listeners.map((item) => (
+              <li key={item.id}>{item.username}</li>
+            ))}
           </ul>
         </section>
         <p
@@ -123,7 +119,7 @@ export function App() {
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-soot bg-[radial-gradient(circle_at_top,_#5c3317_0%,_#120b08_55%)] p-4 font-pixel text-ink">
-      <div className="w-full max-w-lg border-4 border-oak bg-parchment p-8 shadow-[12px_12px_0_#120b08]">
+      <div className="w-full max-w-2xl border-4 border-oak bg-parchment p-8 shadow-[12px_12px_0_#120b08]">
         <p className="font-display text-center text-[0.7rem] tracking-[0.4em] text-ember uppercase">
           Lanterns are lit
         </p>
@@ -154,7 +150,7 @@ export function App() {
         </label>
         <fieldset className="mt-6">
           <legend className="text-xs tracking-widest uppercase">Visage</legend>
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div className="mt-2 grid grid-cols-4 gap-2">
             {portraits.map((item) => (
               <label key={item.id} className={pickClass(avatar === item.id)}>
                 <input

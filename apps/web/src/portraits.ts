@@ -8,12 +8,18 @@ export const defaultAvatar = "wizard";
 export const defaultPet = "none";
 
 export const portraits: ReadonlyArray<Portrait> = [
-  { id: "wizard", label: "Wizard" },
-  { id: "ranger", label: "Ranger" },
+  { id: "barbarian", label: "Barbarian" },
   { id: "bard", label: "Bard" },
-  { id: "rogue", label: "Rogue" },
   { id: "cleric", label: "Cleric" },
+  { id: "druid", label: "Druid" },
+  { id: "fighter", label: "Fighter" },
+  { id: "monk", label: "Monk" },
   { id: "paladin", label: "Paladin" },
+  { id: "ranger", label: "Ranger" },
+  { id: "rogue", label: "Rogue" },
+  { id: "sorcerer", label: "Sorcerer" },
+  { id: "warlock", label: "Warlock" },
+  { id: "wizard", label: "Wizard" },
 ];
 
 export const pets: ReadonlyArray<Portrait> = [
@@ -31,7 +37,7 @@ export const portraitOf = (id: string): Portrait => {
     }
   }
 
-  return portraits[0] ?? { id: defaultAvatar, label: "Wizard" };
+  return portraits[11] ?? { id: defaultAvatar, label: "Wizard" };
 };
 
 export const petOf = (id: string): Portrait => {
