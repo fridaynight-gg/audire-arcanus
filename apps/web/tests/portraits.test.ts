@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { defaultAvatar, defaultPet, portraitOf, portraits, petOf, pets } from "../src/portraits.ts";
-import { moveBody, tavernBlocked, tileKind } from "../src/tavern-map.ts";
+import { atDoor, moveBody, tavernBlocked, tileKind } from "../src/tavern-map.ts";
 import { rollDie } from "../src/dice.ts";
 
 describe("portraits", () => {
@@ -45,6 +45,14 @@ describe("tavernBlocked", () => {
     expect(tavernBlocked(0, 0)).toBe(true);
     expect(tavernBlocked(16, 16)).toBe(true);
     expect(tavernBlocked(320, 400)).toBe(false);
+  });
+});
+
+describe("atDoor", () => {
+  it("hits the south door tiles only", () => {
+    expect(atDoor(12 * 32, 17 * 32 + 8)).toBe(true);
+    expect(atDoor(11 * 32 + 4, 17 * 32)).toBe(true);
+    expect(atDoor(320, 400)).toBe(false);
   });
 });
 

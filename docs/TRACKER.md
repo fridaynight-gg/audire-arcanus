@@ -67,6 +67,8 @@ Update this file on every item. Ritual: one id, then commit.
 | 1.11 | tavern join UX      | done   | portraits tests; avatar/pet on join  |
 | 1.12 | hall walk chat dice | done   | 12 classes; pose/say/roll; map tests |
 | 1.13 | tavern room art     | done   | tile kinds; bar/tables/lanterns      |
+| 1.14 | restore seat        | done   | sessionStorage reconnect on refresh  |
+| 1.15 | hall leave door     | done   | atDoor; clearSeat; leave WS          |
 | 2.5  | Worklet + wasm Opus | done   | Playwright player-state live         |
 
 ## Lane G — Capture

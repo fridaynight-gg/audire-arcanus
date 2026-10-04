@@ -138,6 +138,7 @@ export const startPlayback = async (
 
   return {
     stop: () => {
+      send({ _tag: "leave" });
       ws.close();
       void ctx.close();
       decoder.free();

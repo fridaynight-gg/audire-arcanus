@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Hall } from "./Hall.tsx";
 import { startPlayback, type ControlNote, type Playback, type PlayerState } from "./player.ts";
 import { defaultAvatar, defaultPet, portraits, pets } from "./portraits.ts";
-import { readSeat, writeSeat } from "./seat.ts";
+import { clearSeat, readSeat, writeSeat } from "./seat.ts";
 import { Familiar, Sprite } from "./sprites.tsx";
 
 type Listener = {
@@ -108,6 +108,21 @@ export function App() {
     connect(username, joinCode, avatar, pet);
   };
 
+  const leave = () => {
+    playback?.stop();
+    clearSeat(sessionStorage);
+    started.current = false;
+    inbox.current = [];
+    setPlayback(undefined);
+    setLobbyId("");
+    setSelfId("");
+    setLobbyName("");
+    setCode("");
+    setListeners([]);
+    setPlayer("idle");
+    setError("");
+  };
+
   if (lobbyId) {
     return (
       <main className="relative min-h-dvh overflow-hidden bg-floor font-pixel text-parchment">
@@ -132,6 +147,7 @@ export function App() {
               send={playback.send}
               inbox={inbox}
               listeners={listeners}
+              onLeave={leave}
             />
           ) : null}
           <ul aria-label="listeners" className="sr-only">

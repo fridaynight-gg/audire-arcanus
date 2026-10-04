@@ -123,3 +123,10 @@ export const moveBody = (x: number, y: number, dx: number, dy: number) => {
 
   return { x: nx, y: ny };
 };
+
+export const atDoor = (x: number, y: number): boolean => {
+  const cx = Math.floor(x / tile);
+  const cy = Math.floor(y / tile);
+
+  return cy >= rows - 1 && (cx === 11 || cx === 12);
+};

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DiceToss } from "./DiceToss.tsx";
 import { type Anim, type Dir, drawFamiliar, drawPatron } from "./draw.ts";
 import { drawTavern } from "./draw-room.ts";
-import { cols, moveBody, rows, spawnX, spawnY, tile } from "./tavern-map.ts";
+import { atDoor, cols, moveBody, rows, spawnX, spawnY, tile } from "./tavern-map.ts";
 import { routeHallKey } from "./hall-keys.ts";
 import type { ControlNote } from "./player.ts";
 
@@ -33,6 +33,7 @@ export function Hall({
   send,
   inbox,
   listeners,
+  onLeave,
 }: {
   readonly selfId: string;
   readonly selfName: string;
@@ -46,6 +47,7 @@ export function Hall({
     readonly avatar?: string;
     readonly pet?: string;
   }>;
+  readonly onLeave: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sayRef = useRef<HTMLInputElement>(null);
@@ -306,6 +308,21 @@ export function Hall({
         height={rows * tile}
         tabIndex={0}
         className="w-full border-4 border-beam [image-rendering:pixelated] outline-none"
+        onMouseMove={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          const x = ((event.clientX - box.left) / box.width) * event.currentTarget.width;
+          const y = ((event.clientY - box.top) / box.height) * event.currentTarget.height;
+          event.currentTarget.style.cursor = atDoor(x, y) ? "pointer" : "default";
+        }}
+        onClick={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          const x = ((event.clientX - box.left) / box.width) * event.currentTarget.width;
+          const y = ((event.clientY - box.top) / box.height) * event.currentTarget.height;
+
+          if (atDoor(x, y)) {
+            onLeave();
+          }
+        }}
       />
       <div className="mt-3 flex gap-2">
         <input
@@ -354,6 +371,17 @@ export function Hall({
           }}
         >
           d20
+        </button>
+        <button
+          type="button"
+          aria-label="leave lobby"
+          title="Leave the hall"
+          className="relative h-[2.75rem] w-12 shrink-0 border-4 border-soot bg-oak shadow-[4px_4px_0_#120b08] hover:bg-wine"
+          onClick={onLeave}
+        >
+          <span className="pointer-events-none absolute inset-1 border-2 border-beam bg-[#6b3a1c]" />
+          <span className="pointer-events-none absolute left-1/2 top-1.5 h-5 w-0.5 -translate-x-1/2 bg-soot" />
+          <span className="pointer-events-none absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-candle" />
         </button>
       </div>
       {banner ? <p className="mt-3 text-center font-pixel text-glow">{banner}</p> : null}
